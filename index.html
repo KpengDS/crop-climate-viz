@@ -2,880 +2,179 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crop, Climate & Seasons — DSC 106</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crop, Climate & Seasons</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
-  <style>
-    :root {
-      --bg: #0e1117;
-      --surface: #161b25;
-      --border: #252d3d;
-      --text: #e8e0d0;
-      --muted: #7a8499;
-      --corn: #f5c842;
-      --wheat: #7dba6f;
-      --cotton: #e07b6a;
-      --accent: #4a9eff;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Source Serif 4', Georgia, serif;
-      font-weight: 300;
-      line-height: 1.75;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 60px 24px;
-      background: radial-gradient(ellipse at 50% 60%, #1a2540 0%, var(--bg) 70%);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-    .hero-eyebrow {
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 20px;
-    }
-    .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.4rem, 6vw, 5rem);
-      font-weight: 700;
-      line-height: 1.1;
-      max-width: 800px;
-      margin-bottom: 24px;
-    }
-    .hero h1 em {
-      font-style: italic;
-      color: var(--corn);
-    }
-    .hero-sub {
-      max-width: 560px;
-      color: var(--muted);
-      font-size: 1.05rem;
-      margin-bottom: 48px;
-    }
-    .crop-badges {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .badge {
-      padding: 8px 20px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      font-weight: 600;
-      font-family: 'Source Serif 4', serif;
-    }
-    .badge-corn   { background: rgba(245,200,66,0.15); color: var(--corn);   border: 1px solid rgba(245,200,66,0.3); }
-    .badge-wheat  { background: rgba(125,186,111,0.15); color: var(--wheat); border: 1px solid rgba(125,186,111,0.3); }
-    .badge-cotton { background: rgba(224,123,106,0.15); color: var(--cotton);border: 1px solid rgba(224,123,106,0.3); }
-
-    .scroll-hint {
-      position: absolute;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--muted);
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      animation: bounce 2s ease-in-out infinite;
-    }
-    @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
-
-    /* ── SECTIONS ── */
-    section {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 80px 24px;
-    }
-    .section-label {
-      font-size: 0.72rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.6rem, 3vw, 2.4rem);
-      font-weight: 700;
-      margin-bottom: 16px;
-      line-height: 1.2;
-    }
-    .section-body {
-      color: var(--muted);
-      max-width: 620px;
-      margin-bottom: 40px;
-      font-size: 1rem;
-    }
-
-    /* ── MAP SECTION ── */
-    .map-section { border-top: 1px solid var(--border); }
-    #us-map-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-    #us-map-container svg { display: block; width: 100%; }
-    .map-tooltip {
-      position: absolute;
-      background: #1e2535;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-      color: var(--text);
-      max-width: 180px;
-    }
-
-    /* ── CHOROPLETH SECTION ── */
-    .choro-section { border-top: 1px solid var(--border); }
-    .tab-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      padding: 8px 20px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font-family: 'Source Serif 4', serif;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-    .choro-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 700px) { .choro-grid { grid-template-columns: 1fr; } }
-    .choro-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-    .choro-card h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem;
-      margin-bottom: 12px;
-      font-weight: 700;
-    }
-    .choro-card svg { width: 100%; display: block; }
-
-    .slider-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    .slider-row label {
-      font-size: 0.85rem;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    #month-slider {
-      flex: 1;
-      min-width: 180px;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-    #month-display {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--text);
-      min-width: 80px;
-    }
-
-    /* ── LINE CHART SECTION ── */
-    .line-section { border-top: 1px solid var(--border); }
-    .line-tab-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    #line-chart-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-    }
-    #line-chart-container svg { width: 100%; display: block; }
-
-    /* ── SCATTER SECTION ── */
-    .scatter-section { border-top: 1px solid var(--border); }
-    .scatter-tab-row { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
-    #scatter-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-    }
-    #scatter-container svg { width: 100%; display: block; }
-
-    /* ── LEGEND ── */
-    .legend {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .legend-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* ── TAKEAWAY ── */
-    .takeaway-section {
-      border-top: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .takeaway-section section {
-      max-width: 700px;
-      text-align: center;
-      margin: 0 auto;
-    }
-    .takeaway-quote {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
-      font-style: italic;
-      line-height: 1.5;
-      color: var(--text);
-      margin-bottom: 24px;
-      border-left: 3px solid var(--corn);
-      padding-left: 20px;
-      text-align: left;
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      text-align: center;
-      padding: 40px 24px;
-      color: var(--muted);
-      font-size: 0.8rem;
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── WRITEUP ── */
-    .writeup-section { border-top: 1px solid var(--border); }
-    .writeup-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-    }
-    @media (max-width: 700px) { .writeup-grid { grid-template-columns: 1fr; } }
-    .writeup-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-    }
-    .writeup-box h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      margin-bottom: 12px;
-    }
-    .writeup-box p { color: var(--muted); font-size: 0.95rem; }
-
-    /* axis text */
-    .tick text { fill: var(--muted); font-size: 11px; font-family: 'Source Serif 4', serif; }
-    .tick line, .domain { stroke: var(--border); }
-  </style>
+  <script src="https://unpkg.com/topojson-client@3"></script>
 </head>
+
 <body>
+  <main>
 
-<!-- HERO -->
-<div class="hero">
-  <p class="hero-eyebrow">DSC 106 · Final Project · GeoInsight</p>
-  <h1>How Do <em>Seasons</em> Shape Crops & Climate?</h1>
-  <p class="hero-sub">Exploring how land surface temperature, precipitation, and vegetation health interact across America's three iconic crop regions — month by month.</p>
-  <div class="crop-badges">
-    <span class="badge badge-corn">🌽 Iowa — Corn</span>
-    <span class="badge badge-wheat">🌾 Kansas — Wheat</span>
-    <span class="badge badge-cotton">🪴 Texas — Cotton</span>
-  </div>
-  <p class="scroll-hint">↓ scroll to explore</p>
-</div>
-
-<!-- MAP SECTION -->
-<div class="map-section">
-  <section>
-    <p class="section-label">01 — Geography</p>
-    <h2 class="section-title">Three States, Three Stories</h2>
-    <p class="section-body">Iowa, Kansas, and Texas each represent distinct agricultural and climatic zones. Hover to explore, then scroll down to see how their seasonal patterns diverge.</p>
-    <div id="us-map-container">
-      <div class="map-tooltip" id="map-tooltip"></div>
-    </div>
-  </section>
-</div>
-
-<!-- CHOROPLETH SECTION -->
-<div class="choro-section">
-  <section>
-    <p class="section-label">02 — Spatial Patterns</p>
-    <h2 class="section-title">Climate Across the Three States</h2>
-    <p class="section-body">Use the slider to scrub through each month. The left map shows LST or Precipitation intensity; the right always shows NDVI (vegetation health). Notice how Iowa greens up in summer while Texas stays warm year-round.</p>
-
-    <div class="tab-row" id="choro-tabs">
-      <button class="tab-btn active" data-var="LST_Day">🌡 LST (Day)</button>
-      <button class="tab-btn" data-var="LST_Night">🌙 LST (Night)</button>
-      <button class="tab-btn" data-var="Precipitation">🌧 Precipitation</button>
-    </div>
-    <div class="slider-row">
-      <label>Month:</label>
-      <input type="range" id="month-slider" min="1" max="12" value="7"/>
-      <span id="month-display">July</span>
-    </div>
-    <div class="choro-grid">
-      <div class="choro-card">
-        <h3 id="choro-left-title">🌡 Land Surface Temp (Day) · July</h3>
-        <svg id="choro-left" viewBox="0 0 420 280"></svg>
-        <svg id="legend-left" viewBox="0 0 420 30" style="margin-top:8px"></svg>
+    <!-- INTRO -->
+    <section class="intro">
+      <h1>How Do Seasons Shape Crops &amp; Climate?</h1>
+      <p class="subtitle">
+        This visualization explores how land surface temperature (LST), precipitation,
+        and vegetation health (NDVI) interact seasonally across three of America's
+        most important crop-producing regions — Iowa (corn), Kansas (wheat), and Texas (cotton).
+      </p>
+      <div class="team-info">
+        <p><strong>Team Members</strong></p>
+        <ul>
+          <li>Zihan Zhang — zaz003@ucsd.edu</li>
+          <li>Baoyi Wan — bawan@ucsd.edu</li>
+          <li>Kangxin Peng — k2peng@ucsd.edu</li>
+          <li>Yadushan Thillainathan — ythillainathan@ucsd.edu</li>
+        </ul>
       </div>
-      <div class="choro-card">
-        <h3 id="choro-right-title">🌿 Vegetation Index (NDVI) · July</h3>
-        <svg id="choro-right" viewBox="0 0 420 280"></svg>
-        <svg id="legend-right" viewBox="0 0 420 30" style="margin-top:8px"></svg>
+    </section>
+
+    <!-- MAIN FINDING -->
+    <section class="finding-card">
+      <h2>Research Question</h2>
+      <p>
+        How do seasonal patterns of precipitation, land surface temperature (LST),
+        and vegetation dynamics (NDVI) interact across major crop-producing regions
+        in Iowa (corn), Kansas (wheat), and Texas (cotton)?
+      </p>
+    </section>
+
+    <!-- US MAP -->
+    <section class="map-section">
+      <div class="chart-card">
+        <h2>Three States, Three Stories</h2>
+        <p class="chart-note">
+          Iowa, Kansas, and Texas each represent distinct agricultural and climatic zones.
+          Hover over a highlighted state to see its average climate data.
+        </p>
+        <div id="us-map"></div>
       </div>
-    </div>
-  </section>
-</div>
+    </section>
 
-<!-- LINE CHART SECTION -->
-<div class="line-section">
-  <section>
-    <p class="section-label">03 — Seasonal Trends</p>
-    <h2 class="section-title">Month-by-Month Patterns</h2>
-    <p class="section-body">Iowa's corn drives a dramatic mid-summer NDVI surge. Kansas wheat peaks early before harvest. Texas cotton greens up slowly through summer heat. Switch between variables to compare.</p>
-    <div class="line-tab-row" id="line-tabs">
-      <button class="tab-btn active" data-var="NDVI">🌿 NDVI</button>
-      <button class="tab-btn" data-var="LST_Day">🌡 LST (Day)</button>
-      <button class="tab-btn" data-var="LST_Night">🌙 LST (Night)</button>
-      <button class="tab-btn" data-var="Precipitation">🌧 Precipitation</button>
-    </div>
-    <div id="line-chart-container">
-      <svg id="line-chart" viewBox="0 0 800 350"></svg>
-    </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--corn)"></div>Iowa (Corn)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--wheat)"></div>Kansas (Wheat)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cotton)"></div>Texas (Cotton)</div>
-    </div>
-  </section>
-</div>
-
-<!-- SCATTER SECTION -->
-<div class="scatter-section">
-  <section>
-    <p class="section-label">04 — Correlations</p>
-    <h2 class="section-title">How Do Temperature & Rain Relate to Vegetation?</h2>
-    <p class="section-body">Each dot represents one state in one month. Texas stays warm but varies in greenness; Iowa shows a strong LST–NDVI arc as seasons change.</p>
-    <div class="scatter-tab-row" id="scatter-tabs">
-      <button class="tab-btn active" data-x="LST_Day">LST (Day) vs NDVI</button>
-      <button class="tab-btn" data-x="Precipitation">Precipitation vs NDVI</button>
-    </div>
-    <div id="scatter-container">
-      <svg id="scatter-chart" viewBox="0 0 800 380"></svg>
-    </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--corn)"></div>Iowa (Corn)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--wheat)"></div>Kansas (Wheat)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cotton)"></div>Texas (Cotton)</div>
-    </div>
-  </section>
-</div>
-
-<!-- TAKEAWAY -->
-<div class="takeaway-section">
-  <section>
-    <p class="section-label">05 — Key Insight</p>
-    <h2 class="section-title">What We Learned</h2>
-    <div class="takeaway-quote">
-      Crop type shapes climate response: Iowa's corn drives the most dramatic seasonal NDVI swing, while Texas cotton endures extreme summer heat with modest vegetation. Precipitation is the wild card — Kansas receives more rain in growing season than Iowa, yet Iowa out-greens them all.
-    </div>
-    <p class="section-body">These differences aren't just about geography — they reflect how different crops interact with local climate systems, and how farming practices shape the land surface itself.</p>
-  </section>
-</div>
-
-<!-- WRITEUP -->
-<div class="writeup-section">
-  <section>
-    <p class="section-label">06 — Project Notes</p>
-    <h2 class="section-title" style="margin-bottom:32px">Prototype Writeup</h2>
-    <div class="writeup-grid">
-      <div class="writeup-box">
-        <h3>What have we done so far?</h3>
-        <p>We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS precipitation data for Iowa, Kansas, and Texas using Google Earth Engine. We built a D3.js interactive webpage with four visualization sections: a US map highlighting the three states, choropleth color maps with a month slider, multi-line seasonal trend charts with variable switching, and scatterplots showing correlations between climate and vegetation variables. The GitHub Pages site is live and all interactions are functional.</p>
+    <!-- CONTROLS -->
+    <section class="controls">
+      <div class="control-group">
+        <label for="variable-select">Variable:</label>
+        <select id="variable-select">
+          <option value="LST_Day">Land Surface Temp — Day (°C)</option>
+          <option value="LST_Night">Land Surface Temp — Night (°C)</option>
+          <option value="Precipitation">Precipitation (mm)</option>
+        </select>
       </div>
-      <div class="writeup-box">
-        <h3>What will be the most challenging part to design?</h3>
-        <p>The most challenging aspect will be designing the choropleth maps at the county or sub-state level, which requires additional spatial data beyond the current state-level averages. Accurately mapping spatial variation within each state — showing, for instance, which parts of Iowa are greenest in July — demands raster-to-vector aggregation at finer resolution. Balancing visual clarity across three side-by-side maps while keeping the time slider intuitive will require careful layout and color scale decisions.</p>
+      <div class="control-group">
+        <label for="month-slider">Month: </label>
+        <input type="range" id="month-slider" min="1" max="12" value="7" />
+        <span id="month-label">July</span>
       </div>
-    </div>
-  </section>
-</div>
+    </section>
 
-<footer>
-  DSC 106 Final Project · GeoInsight Team · Data: NASA MODIS + CHIRPS via Google Earth Engine
-</footer>
+    <!-- CHOROPLETH MAPS -->
+    <section class="charts">
+      <div class="chart-card">
+        <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
+        <p class="chart-note">
+          Color intensity shows the selected variable's value for each state.
+          Use the controls above to switch variables and scrub through months.
+        </p>
+        <div id="choro-left"></div>
+        <div id="legend-left" class="legend-bar-container"></div>
+      </div>
 
-<script>
-// ── DATA & CONSTANTS ──────────────────────────────────────────────
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const COLORS = { Iowa: '#f5c842', Kansas: '#7dba6f', Texas: '#e07b6a' };
-const STATE_FIPS = { Iowa: '19', Kansas: '20', Texas: '48' };
-const VAR_LABELS = {
-  NDVI: 'NDVI (Vegetation Index)',
-  LST_Day: 'LST Day (°C)',
-  LST_Night: 'LST Night (°C)',
-  Precipitation: 'Precipitation (mm)'
-};
+      <div class="chart-card">
+        <h2 id="choro-right-title">Vegetation Index (NDVI) · July</h2>
+        <p class="chart-note">
+          NDVI measures vegetation health — higher values mean greener, healthier crops.
+          Compare with the left map to see how vegetation responds to climate.
+        </p>
+        <div id="choro-right"></div>
+        <div id="legend-right" class="legend-bar-container"></div>
+      </div>
+    </section>
 
-let csvData = [];
-let geoData = null;
-let activeChoroVar = 'LST_Day';
-let activeMonth = 7;
-let activeLineVar = 'NDVI';
-let activeScatterX = 'LST_Day';
+    <!-- LINE CHART -->
+    <section class="map-section">
+      <div class="chart-card">
+        <h2 id="line-title">Seasonal Trends — Vegetation Index (NDVI)</h2>
+        <p class="chart-note">
+          Each line shows how the selected variable changes month by month for each state.
+          Use the Variable dropdown above to switch between NDVI, LST, and Precipitation.
+        </p>
+        <div id="line-chart"></div>
+      </div>
+    </section>
 
-// ── LOAD DATA ────────────────────────────────────────────────────
-Promise.all([
-  d3.csv('data.csv', d => ({
-    state: d.state,
-    month: +d.month,
-    NDVI: +d.NDVI,
-    LST_Day: +d.LST_Day,
-    LST_Night: +d.LST_Night,
-    Precipitation: +d.Precipitation,
-    state_crop: d.state_crop
-  })),
-  d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
-]).then(([data, us]) => {
-  csvData = data;
-  geoData = us;
-  drawUSMap();
-  drawChoropleth();
-  drawLineChart();
-  drawScatter();
-  setupControls();
-});
+    <!-- SCATTER -->
+    <section class="charts">
+      <div class="chart-card">
+        <h2>LST vs Vegetation (NDVI)</h2>
+        <p class="chart-note">
+          Each dot is one state in one month. Hover for details.
+          Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
+        </p>
+        <div id="scatter-lst"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Precipitation vs Vegetation (NDVI)</h2>
+        <p class="chart-note">
+          Kansas receives heavy spring rain, yet Iowa out-greens them in summer —
+          suggesting crop type matters as much as rainfall.
+        </p>
+        <div id="scatter-precip"></div>
+      </div>
+    </section>
 
-// ── US MAP ───────────────────────────────────────────────────────
-function drawUSMap() {
-  const container = document.getElementById('us-map-container');
-  const W = container.clientWidth || 900;
-  const H = Math.round(W * 0.55);
+    <!-- WRITEUP -->
+    <section class="writeup">
+      <h2>Write-up</h2>
+      <div class="writeup-grid">
+        <div>
+          <h3>What have we done so far?</h3>
+          <p>
+            We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS
+            precipitation data for Iowa, Kansas, and Texas using Google Earth Engine.
+            We built a D3.js interactive webpage with four visualization sections: a US map
+            highlighting the three states, choropleth color maps with a month slider,
+            multi-line seasonal trend charts with variable switching, and scatterplots
+            showing correlations between climate and vegetation variables.
+          </p>
+        </div>
+        <div>
+          <h3>What will be most challenging to design?</h3>
+          <p>
+            The most challenging part will be the choropleth maps at county or sub-state
+            resolution, which requires additional spatial data beyond current state-level
+            averages. Accurately mapping variation within each state demands raster-to-vector
+            aggregation at finer resolution. Balancing visual clarity across two side-by-side
+            maps while keeping the time slider intuitive will also require careful layout
+            and color scale decisions.
+          </p>
+        </div>
+        <div>
+          <h3>Data Sources</h3>
+          <p>
+            NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
+            MCD12Q1 (Land Cover). Precipitation from UCSB-CHG/CHIRPS/DAILY.
+            All data extracted via Google Earth Engine for the years 2015–2020,
+            averaged monthly across the three target states.
+          </p>
+        </div>
+        <div>
+          <h3>Visual Encoding</h3>
+          <p>
+            Choropleth maps use sequential color scales: green for NDVI, orange for LST,
+            and blue for precipitation. Line charts use distinct colors per state —
+            yellow for Iowa, green for Kansas, red-orange for Texas — consistent across
+            all visualizations. Scatter plots encode month as dot position and state as color.
+          </p>
+        </div>
+      </div>
+    </section>
 
-  const svg = d3.select('#us-map-container')
-    .append('svg')
-    .attr('viewBox', `0 0 ${W} ${H}`)
-    .style('width','100%');
+  </main>
 
-  const projection = d3.geoAlbersUsa().fitSize([W, H], topojson.feature(geoData, geoData.objects.states));
-  const path = d3.geoPath().projection(projection);
-  const states = topojson.feature(geoData, geoData.objects.states);
-  const highlighted = new Set(Object.values(STATE_FIPS));
-  const tooltip = document.getElementById('map-tooltip');
-
-  const stateNames = {};
-  states.features.forEach(f => {
-    const id = String(f.id).padStart(2,'0');
-    if (id === '19') stateNames[id] = 'Iowa';
-    else if (id === '20') stateNames[id] = 'Kansas';
-    else if (id === '48') stateNames[id] = 'Texas';
-  });
-
-  svg.selectAll('path.state')
-    .data(states.features)
-    .join('path')
-    .attr('class','state')
-    .attr('d', path)
-    .attr('fill', d => {
-      const id = String(d.id).padStart(2,'0');
-      if (id === '19') return 'rgba(245,200,66,0.35)';
-      if (id === '20') return 'rgba(125,186,111,0.35)';
-      if (id === '48') return 'rgba(224,123,106,0.35)';
-      return 'rgba(255,255,255,0.04)';
-    })
-    .attr('stroke', d => {
-      const id = String(d.id).padStart(2,'0');
-      if (highlighted.has(id)) return '#fff';
-      return 'rgba(255,255,255,0.08)';
-    })
-    .attr('stroke-width', d => highlighted.has(String(d.id).padStart(2,'0')) ? 1.5 : 0.5)
-    .on('mousemove', function(event, d) {
-      const id = String(d.id).padStart(2,'0');
-      const name = stateNames[id];
-      if (!name) return;
-      const stateData = csvData.filter(r => r.state === name);
-      const avgNDVI = d3.mean(stateData, r => r.NDVI).toFixed(3);
-      const avgLST = d3.mean(stateData, r => r.LST_Day).toFixed(1);
-      const rect = container.getBoundingClientRect();
-      tooltip.style.left = (event.clientX - rect.left + 12) + 'px';
-      tooltip.style.top  = (event.clientY - rect.top  - 20) + 'px';
-      tooltip.style.opacity = 1;
-      const crop = { Iowa:'Corn', Kansas:'Wheat', Texas:'Cotton' }[name];
-      tooltip.innerHTML = `<strong>${name}</strong><br/>Crop: ${crop}<br/>Avg NDVI: ${avgNDVI}<br/>Avg LST Day: ${avgLST}°C`;
-    })
-    .on('mouseleave', () => { tooltip.style.opacity = 0; });
-
-  // Labels
-  const labelPositions = { '19': null, '20': null, '48': null };
-  states.features.forEach(f => {
-    const id = String(f.id).padStart(2,'0');
-    if (labelPositions.hasOwnProperty(id)) {
-      const centroid = path.centroid(f);
-      labelPositions[id] = centroid;
-    }
-  });
-
-  const labelData = [
-    { id:'19', name:'Iowa', sub:'Corn',   color:'#f5c842' },
-    { id:'20', name:'Kansas', sub:'Wheat', color:'#7dba6f' },
-    { id:'48', name:'Texas', sub:'Cotton', color:'#e07b6a' }
-  ];
-
-  labelData.forEach(({ id, name, sub, color }) => {
-    const pos = labelPositions[id];
-    if (!pos || isNaN(pos[0])) return;
-    svg.append('text')
-      .attr('x', pos[0]).attr('y', pos[1] - 6)
-      .attr('text-anchor','middle')
-      .attr('fill', color)
-      .attr('font-size', 13)
-      .attr('font-family',"'Playfair Display', serif")
-      .attr('font-weight', 700)
-      .text(name);
-    svg.append('text')
-      .attr('x', pos[0]).attr('y', pos[1] + 10)
-      .attr('text-anchor','middle')
-      .attr('fill', color)
-      .attr('font-size', 10)
-      .attr('font-family',"'Source Serif 4', serif")
-      .attr('opacity', 0.8)
-      .text(sub);
-  });
-}
-
-// ── CHOROPLETH ────────────────────────────────────────────────────
-function drawChoropleth() {
-  if (!geoData || csvData.length === 0) return;
-
-  const states = topojson.feature(geoData, geoData.objects.states);
-  const targetIds = { Iowa:'19', Kansas:'20', Texas:'48' };
-  const threeStates = states.features.filter(f => Object.values(targetIds).includes(String(f.id).padStart(2,'0')));
-
-  const idToState = {};
-  Object.entries(targetIds).forEach(([s,id]) => idToState[id] = s);
-
-  function getVal(stateName, variable, month) {
-    const row = csvData.find(d => d.state === stateName && d.month === month);
-    return row ? row[variable] : null;
-  }
-
-  function renderMap(svgId, variable, month, title, titleId) {
-    const svg = d3.select(`#${svgId}`);
-    svg.selectAll('*').remove();
-
-    const W = 420, H = 280;
-    const projection = d3.geoAlbersUsa().fitSize([W - 20, H - 20], { type:'FeatureCollection', features: threeStates });
-    projection.translate([projection.translate()[0] + 10, projection.translate()[1] + 10]);
-    const path = d3.geoPath().projection(projection);
-
-    const vals = threeStates.map(f => {
-      const id = String(f.id).padStart(2,'0');
-      return getVal(idToState[id], variable, month);
-    }).filter(v => v !== null);
-
-    const extent = d3.extent(csvData, d => d[variable]);
-    let colorScale;
-    if (variable === 'NDVI') colorScale = d3.scaleSequential(d3.interpolateGreens).domain(extent);
-    else if (variable.startsWith('LST')) colorScale = d3.scaleSequential(d3.interpolateOranges).domain(extent);
-    else colorScale = d3.scaleSequential(d3.interpolateBlues).domain(extent);
-
-    svg.selectAll('path')
-      .data(threeStates)
-      .join('path')
-      .attr('d', path)
-      .attr('fill', f => {
-        const id = String(f.id).padStart(2,'0');
-        const v = getVal(idToState[id], variable, month);
-        return v !== null ? colorScale(v) : '#333';
-      })
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 1.2)
-      .append('title')
-      .text(f => {
-        const id = String(f.id).padStart(2,'0');
-        const name = idToState[id];
-        const v = getVal(name, variable, month);
-        return `${name}: ${v !== null ? v.toFixed(2) : 'N/A'}`;
-      });
-
-    // State labels
-    threeStates.forEach(f => {
-      const id = String(f.id).padStart(2,'0');
-      const name = idToState[id];
-      const c = path.centroid(f);
-      if (!c || isNaN(c[0])) return;
-      const v = getVal(name, variable, month);
-      svg.append('text')
-        .attr('x', c[0]).attr('y', c[1] - 4)
-        .attr('text-anchor','middle')
-        .attr('fill','#fff').attr('font-size', 11)
-        .attr('font-family',"'Playfair Display', serif")
-        .attr('font-weight', 700)
-        .text(name);
-      svg.append('text')
-        .attr('x', c[0]).attr('y', c[1] + 10)
-        .attr('text-anchor','middle')
-        .attr('fill','rgba(255,255,255,0.85)').attr('font-size', 9)
-        .attr('font-family',"'Source Serif 4', serif")
-        .text(v !== null ? v.toFixed(1) : '');
-    });
-
-    // Gradient legend
-    const legendSvg = d3.select(`#legend-${svgId === 'choro-left' ? 'left' : 'right'}`);
-    legendSvg.selectAll('*').remove();
-    const defs = legendSvg.append('defs');
-    const gradId = `grad-${svgId}`;
-    const grad = defs.append('linearGradient').attr('id', gradId);
-    for (let i = 0; i <= 10; i++) {
-      grad.append('stop')
-        .attr('offset', `${i*10}%`)
-        .attr('stop-color', colorScale(extent[0] + (extent[1]-extent[0]) * i/10));
-    }
-    legendSvg.append('rect').attr('x',10).attr('y',5).attr('width',300).attr('height',12)
-      .attr('fill',`url(#${gradId})`).attr('rx',4);
-    legendSvg.append('text').attr('x',10).attr('y',28).attr('fill','#7a8499').attr('font-size',9).text(extent[0].toFixed(1));
-    legendSvg.append('text').attr('x',310).attr('y',28).attr('fill','#7a8499').attr('font-size',9).attr('text-anchor','end').text(extent[1].toFixed(1));
-
-    document.getElementById(titleId).textContent = title + ' · ' + MONTHS[month-1];
-  }
-
-  const icons = { LST_Day:'🌡', LST_Night:'🌙', Precipitation:'🌧' };
-
-  function update() {
-    const icon = icons[activeChoroVar] || '';
-    renderMap('choro-left', activeChoroVar, activeMonth, `${icon} ${VAR_LABELS[activeChoroVar]}`, 'choro-left-title');
-    renderMap('choro-right', 'NDVI', activeMonth, '🌿 Vegetation Index (NDVI)', 'choro-right-title');
-  }
-
-  window.updateChoropleth = update;
-  update();
-}
-
-// ── LINE CHART ────────────────────────────────────────────────────
-function drawLineChart() {
-  function render(variable) {
-    const svg = d3.select('#line-chart');
-    svg.selectAll('*').remove();
-    const W = 800, H = 350;
-    const m = { top:20, right:30, bottom:50, left:55 };
-    const iW = W - m.left - m.right;
-    const iH = H - m.top - m.bottom;
-    const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
-
-    const xScale = d3.scaleLinear().domain([1,12]).range([0, iW]);
-    const yExt = d3.extent(csvData, d => d[variable]);
-    const yPad = (yExt[1] - yExt[0]) * 0.1;
-    const yScale = d3.scaleLinear().domain([yExt[0] - yPad, yExt[1] + yPad]).range([iH, 0]);
-
-    // Grid
-    g.append('g').call(d3.axisLeft(yScale).ticks(6).tickSize(-iW))
-      .attr('class','tick')
-      .call(ax => ax.select('.domain').remove())
-      .call(ax => ax.selectAll('line').attr('stroke','rgba(255,255,255,0.06)'));
-
-    g.append('g').attr('transform',`translate(0,${iH})`)
-      .call(d3.axisBottom(xScale).ticks(12).tickFormat(i => MONTHS[i-1]))
-      .attr('class','tick');
-
-    g.append('text').attr('x', iW/2).attr('y', iH+42)
-      .attr('text-anchor','middle').attr('fill','#7a8499').attr('font-size',12).text('Month');
-    g.append('text').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-42)
-      .attr('text-anchor','middle').attr('fill','#7a8499').attr('font-size',12).text(VAR_LABELS[variable]);
-
-    const line = d3.line().x(d => xScale(d.month)).y(d => yScale(d[variable])).curve(d3.curveCatmullRom);
-
-    ['Iowa','Kansas','Texas'].forEach(state => {
-      const stateData = csvData.filter(d => d.state === state).sort((a,b)=>a.month-b.month);
-      const color = COLORS[state];
-
-      g.append('path')
-        .datum(stateData)
-        .attr('fill','none')
-        .attr('stroke', color)
-        .attr('stroke-width', 2.5)
-        .attr('opacity', 0.9)
-        .attr('d', line);
-
-      g.selectAll(`.dot-${state}`)
-        .data(stateData)
-        .join('circle')
-        .attr('class', `dot-${state}`)
-        .attr('cx', d => xScale(d.month))
-        .attr('cy', d => yScale(d[variable]))
-        .attr('r', 4)
-        .attr('fill', color)
-        .attr('stroke', '#0e1117')
-        .attr('stroke-width', 1.5)
-        .append('title')
-        .text(d => `${state} · ${MONTHS[d.month-1]}: ${d[variable].toFixed(3)}`);
-    });
-  }
-
-  window.updateLineChart = render;
-  render(activeLineVar);
-}
-
-// ── SCATTER ───────────────────────────────────────────────────────
-function drawScatter() {
-  function render(xVar) {
-    const svg = d3.select('#scatter-chart');
-    svg.selectAll('*').remove();
-    const W = 800, H = 380;
-    const m = { top:20, right:30, bottom:60, left:60 };
-    const iW = W - m.left - m.right;
-    const iH = H - m.top - m.bottom;
-    const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
-
-    const xExt = d3.extent(csvData, d => d[xVar]);
-    const xPad = (xExt[1] - xExt[0]) * 0.08;
-    const yExt = d3.extent(csvData, d => d.NDVI);
-    const yPad = (yExt[1] - yExt[0]) * 0.08;
-    const xScale = d3.scaleLinear().domain([xExt[0]-xPad, xExt[1]+xPad]).range([0, iW]);
-    const yScale = d3.scaleLinear().domain([yExt[0]-yPad, yExt[1]+yPad]).range([iH, 0]);
-
-    g.append('g').call(d3.axisLeft(yScale).ticks(6).tickSize(-iW))
-      .attr('class','tick')
-      .call(ax => ax.select('.domain').remove())
-      .call(ax => ax.selectAll('line').attr('stroke','rgba(255,255,255,0.06)'));
-
-    g.append('g').attr('transform',`translate(0,${iH})`)
-      .call(d3.axisBottom(xScale).ticks(8))
-      .attr('class','tick');
-
-    g.append('text').attr('x',iW/2).attr('y',iH+48)
-      .attr('text-anchor','middle').attr('fill','#7a8499').attr('font-size',12).text(VAR_LABELS[xVar]);
-    g.append('text').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-46)
-      .attr('text-anchor','middle').attr('fill','#7a8499').attr('font-size',12).text('NDVI (Vegetation Index)');
-
-    // Month labels on dots
-    csvData.forEach(d => {
-      const color = COLORS[d.state];
-      const cx = xScale(d[xVar]);
-      const cy = yScale(d.NDVI);
-      g.append('circle')
-        .attr('cx', cx).attr('cy', cy).attr('r', 7)
-        .attr('fill', color).attr('opacity', 0.75)
-        .attr('stroke', '#0e1117').attr('stroke-width', 1)
-        .append('title')
-        .text(`${d.state} · ${MONTHS[d.month-1]}\n${VAR_LABELS[xVar]}: ${d[xVar].toFixed(1)}\nNDVI: ${d.NDVI.toFixed(3)}`);
-
-      g.append('text')
-        .attr('x', cx).attr('y', cy + 3.5)
-        .attr('text-anchor','middle')
-        .attr('fill','#0e1117')
-        .attr('font-size', 7)
-        .attr('font-weight', 700)
-        .attr('pointer-events','none')
-        .text(MONTHS[d.month-1].slice(0,1));
-    });
-  }
-
-  window.updateScatter = render;
-  render(activeScatterX);
-}
-
-// ── CONTROLS ─────────────────────────────────────────────────────
-function setupControls() {
-  // Choro tabs
-  document.querySelectorAll('#choro-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#choro-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeChoroVar = btn.dataset.var;
-      window.updateChoropleth();
-    });
-  });
-
-  // Month slider
-  const slider = document.getElementById('month-slider');
-  const display = document.getElementById('month-display');
-  slider.addEventListener('input', () => {
-    activeMonth = +slider.value;
-    display.textContent = MONTHS[activeMonth - 1];
-    window.updateChoropleth();
-  });
-
-  // Line tabs
-  document.querySelectorAll('#line-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#line-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeLineVar = btn.dataset.var;
-      window.updateLineChart(activeLineVar);
-    });
-  });
-
-  // Scatter tabs
-  document.querySelectorAll('#scatter-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#scatter-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeScatterX = btn.dataset.x;
-      window.updateScatter(activeScatterX);
-    });
-  });
-}
-</script>
+  <div id="tooltip"></div>
+  <script src="script.js"></script>
 </body>
 </html>

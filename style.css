@@ -1,0 +1,388 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #f4f1eb;
+  --card: #ffffff;
+  --text: #171717;
+  --muted: #5f5f5f;
+  --border: #e8dfd0;
+  --accent: #3a6ea5;
+  --shadow: 0 10px 28px rgba(30, 50, 80, 0.08);
+  --shadow-soft: 0 4px 14px rgba(30, 50, 80, 0.06);
+
+  --iowa: #e6a817;
+  --kansas: #4caf50;
+  --texas: #e07b6a;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 42px 28px 64px;
+}
+
+/* ---------- Intro ---------- */
+
+.intro {
+  margin-bottom: 24px;
+  padding: 30px 34px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+h1 {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  max-width: 800px;
+  margin: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+/* ---------- Team ---------- */
+
+.team-info {
+  margin-top: 22px;
+  padding: 20px;
+  background: #fbf8f1;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+
+.team-info p {
+  margin: 0 0 14px;
+}
+
+.team-info p strong {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--accent);
+  color: white;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.team-info ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-info li {
+  padding: 12px 14px;
+  background: #f4f1eb;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* ---------- Finding ---------- */
+
+.finding-card {
+  margin: 24px 0;
+  padding: 22px 26px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--accent);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.finding-card h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.finding-card p {
+  margin: 0;
+  color: #333;
+  line-height: 1.7;
+}
+
+/* ---------- Controls ---------- */
+
+.controls {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 24px 0;
+  padding: 18px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.control-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+label {
+  font-weight: 700;
+  font-size: 14px;
+  color: #222;
+}
+
+select {
+  min-width: 220px;
+  padding: 9px 14px;
+  border: 1px solid #cfc4b3;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  color: #222;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.15);
+}
+
+input[type="range"] {
+  width: 200px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#month-label {
+  font-weight: 700;
+  font-size: 15px;
+  min-width: 60px;
+  color: var(--accent);
+}
+
+/* ---------- Layout ---------- */
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.map-section {
+  margin: 24px 0;
+}
+
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.chart-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  letter-spacing: -0.3px;
+}
+
+.chart-note {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* ---------- Map ---------- */
+
+#us-map {
+  position: relative;
+  min-height: 400px;
+}
+
+#line-chart {
+  min-height: 380px;
+}
+
+#choro-left,
+#choro-right {
+  min-height: 280px;
+}
+
+.map-svg {
+  background: #dce5f1;
+  border-radius: 12px;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.state-default {
+  fill: #d1dce8;
+  stroke: #8fa5bf;
+  stroke-width: 0.8px;
+}
+
+.state-iowa   { fill: rgba(230, 168, 23, 0.4);  stroke: #e6a817; stroke-width: 1.5px; cursor: pointer; }
+.state-kansas { fill: rgba(76, 175, 80, 0.4);   stroke: #4caf50; stroke-width: 1.5px; cursor: pointer; }
+.state-texas  { fill: rgba(224, 123, 106, 0.4); stroke: #e07b6a; stroke-width: 1.5px; cursor: pointer; }
+
+.state-iowa:hover   { fill: rgba(230, 168, 23, 0.65); }
+.state-kansas:hover { fill: rgba(76, 175, 80, 0.65); }
+.state-texas:hover  { fill: rgba(224, 123, 106, 0.65); }
+
+/* ---------- Choropleth ---------- */
+
+.choro-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.legend-bar-container {
+  margin-top: 8px;
+}
+
+/* ---------- Axes ---------- */
+
+.axis text {
+  font-size: 11px;
+  fill: #777;
+  font-family: Inter, sans-serif;
+}
+
+.axis line,
+.axis .domain {
+  stroke: #ddd;
+}
+
+.axis-label {
+  font-size: 12px;
+  fill: #444;
+  font-weight: 700;
+}
+
+/* ---------- Lines ---------- */
+
+.line-iowa   { stroke: var(--iowa);   fill: none; stroke-width: 2.5px; }
+.line-kansas { stroke: var(--kansas); fill: none; stroke-width: 2.5px; }
+.line-texas  { stroke: var(--texas);  fill: none; stroke-width: 2.5px; }
+
+/* ---------- Legend ---------- */
+
+.legend-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #555;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---------- Tooltip ---------- */
+
+#tooltip {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #d8cabb;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ---------- Writeup ---------- */
+
+.writeup {
+  margin-top: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.writeup h2 {
+  margin: 0 0 20px;
+  font-size: 24px;
+}
+
+.writeup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+}
+
+.writeup h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #1f1f1f;
+}
+
+.writeup h3::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: 2px;
+}
+
+.writeup p {
+  margin: 0;
+  color: #444;
+  line-height: 1.72;
+  font-size: 14px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .charts { grid-template-columns: 1fr; }
+  .writeup-grid { grid-template-columns: 1fr; }
+  .team-info ul { grid-template-columns: 1fr; }
+  .controls { flex-direction: column; align-items: flex-start; }
+}
