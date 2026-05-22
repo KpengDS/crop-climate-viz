@@ -14,12 +14,22 @@
 
     <!-- INTRO -->
     <section class="intro">
-      <h1>How Do Seasons Shape Crops &amp; Climate?</h1>
+      <h1>How Do Climate Shape Crop Production?</h1>
       <p class="subtitle">
-        This visualization explores how land surface temperature (LST), precipitation,
-        and vegetation health (NDVI) interact seasonally across three of America's
-        most important crop-producing regions — Iowa (corn), Kansas (wheat), and Texas (cotton).
+        This visualization explores the data in 2023 of how land surface temperature (LST), 
+        precipitation, correlate with vegetation health (NDVI) seasonally 
+        across three of America's most important crop-producing regions 
+        — Iowa (corn), Kansas (wheat), and Texas (cotton).
       </p>
+      <p>NVDI is a remote sensing metric that measures the health, density, and greenness 
+        of vegetation. It is directly correlated with plant health and biomass: we usually
+         have low NVDI for drought, pest, nutrient deficiencies of crops. For tracking crop 
+         growth, NVDI values rise from emergence (0.2–0.4) to peak greenness (0.6–0.8), and 
+         decline during natural aging prior to harvest. We also monitor NDVI peaks and anomalies 
+         for crop yield prediction. (EOS Data Analytics)</p>
+      <p>Kateryna Sergieieva, NVDI Explained: How the Index Helps Monitor Crop Health, extracted 
+        from: https://eos.com/blog/normalized-difference-vegetation-index-or-ndvi/
+        LST measures temperature of the Earth's surface for the top layer of soil, vegetation, or urban structures.</p>
       <div class="team-info">
         <p><strong>Team Members</strong></p>
         <ul>
@@ -35,9 +45,11 @@
     <section class="finding-card">
       <h2>Research Question</h2>
       <p>
-        How do seasonal patterns of precipitation, land surface temperature (LST),
-        and vegetation dynamics (NDVI) interact across major crop-producing regions
-        in Iowa (corn), Kansas (wheat), and Texas (cotton)?
+        How do seasonal patterns of 
+        precipitation and land surface temperature (LST) correlate 
+        with normalized difference vegetation index (NDVI) across 
+        major crop-producing regions in Iowa (corn), Kansas (wheat), 
+        and Texas (cotton)?
       </p>
     </section>
 
@@ -132,7 +144,10 @@
         <div>
           <h3>What have we done so far?</h3>
           <p>
-            We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS
+            We first use TIGER to restrict the data into specific states that are the focus for our research: 
+            Iowa, Kansas and Texas. Then we define the start time January and end time December in 2023 to 
+            extract NVDI and LST data from NASA MODIS and calculate average NVDI, LST day and night for each 
+            month. Next we extract data from CHIRPS to calculate total
             precipitation data for Iowa, Kansas, and Texas using Google Earth Engine.
             We built a D3.js interactive webpage with four visualization sections: a US map
             highlighting the three states, choropleth color maps with a month slider,
@@ -154,7 +169,7 @@
         <div>
           <h3>Data Sources</h3>
           <p>
-            NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
+            TIGER/2018/States for states data. NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
             MCD12Q1 (Land Cover). Precipitation from UCSB-CHG/CHIRPS/DAILY.
             All data extracted via Google Earth Engine for the years 2015–2020,
             averaged monthly across the three target states.
