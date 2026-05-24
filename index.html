@@ -10,16 +10,213 @@
 </head>
 
 <body>
-  <main>
-
-    <!-- INTRO -->
-    <section class="intro">
-      <h1>How Do Seasons Shape Crops &amp; Climate?</h1>
-      <p class="subtitle">
-        This visualization explores how land surface temperature (LST), precipitation,
-        and vegetation health (NDVI) interact seasonally across three of America's
-        most important crop-producing regions — Iowa (corn), Kansas (wheat), and Texas (cotton).
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">DSC 106 · Final Project · GeoInsight</p>
+      <h1>How Do Seasons Shape Crops & Climate?</h1>
+      <p class="hero-subtitle">
+        Track vegetation health, temperature, and rainfall across Iowa's corn, Kansas's wheat, and Texas's cotton.
+        Discover how climate patterns drive crop yields month by month.
       </p>
+      <div class="crop-badges">
+        <div class="badge badge-iowa">🌽 Iowa · Corn</div>
+        <div class="badge badge-kansas">🌾 Kansas · Wheat</div>
+        <div class="badge badge-texas">🪴 Texas · Cotton</div>
+      </div>
+      <div class="hero-team">
+        <span>Zihan Zhang</span>
+        <span>Baoyi Wan</span>
+        <span>Kangxin Peng</span>
+        <span>Yadushan Thillainathan</span>
+      </div>
+      <p class="scroll-hint">↓ scroll to explore</p>
+    </div>
+  </section>
+
+  <main>
+    <!-- SECTION 01: US MAP -->
+    <section class="dark-section">
+      <div class="section-intro">
+        <p class="section-label">Section 01</p>
+        <h2>Three States, Three Stories</h2>
+        <p>Iowa, Kansas, and Texas each represent distinct agricultural and climatic zones. Hover over a highlighted state to see its average climate data.</p>
+      </div>
+      <div class="chart-card">
+        <p class="chart-note">
+          These three states form the heart of American agriculture. Each has a unique relationship between climate and crops.
+        </p>
+        <div id="us-map"></div>
+      </div>
+    </section>
+
+    <!-- RESEARCH QUESTION CARD -->
+    <section class="dark-section">
+      <div class="finding-card">
+        <h2>Research Question</h2>
+        <p>
+          How do seasonal patterns of precipitation, land surface temperature (LST),
+          and vegetation dynamics (NDVI) interact across major crop-producing regions
+          in Iowa (corn), Kansas (wheat), and Texas (cotton)?
+        </p>
+      </div>
+    </section>
+
+    <!-- CONTROLS (persistent) -->
+    <section class="dark-section sticky-controls">
+      <div class="controls">
+        <div class="control-group">
+          <label for="variable-select">Variable:</label>
+          <select id="variable-select">
+            <option value="LST_Day">Land Surface Temp — Day (°C)</option>
+            <option value="LST_Night">Land Surface Temp — Night (°C)</option>
+            <option value="Precipitation">Precipitation (mm)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="month-slider">Month: </label>
+          <input type="range" id="month-slider" min="1" max="12" value="7" />
+          <span id="month-label">July</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 02: CHOROPLETH MAPS -->
+    <section class="dark-section">
+      <div class="section-intro">
+        <p class="section-label">Section 02</p>
+        <h2>Climate Across the Seasons</h2>
+        <p>Use the slider to move through each month. The left map shows LST or Precipitation intensity; the right always shows NDVI. Try dragging from January to July and watch Texas heat up while Iowa stays green.</p>
+      </div>
+      <div class="charts">
+        <div class="chart-card">
+          <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
+          <p class="chart-note">
+            Color intensity shows the selected variable's value for each state.
+            Use the controls above to switch variables and scrub through months.
+          </p>
+          <div id="choro-left"></div>
+          <div id="legend-left" class="legend-bar-container"></div>
+        </div>
+
+        <div class="chart-card">
+          <h2 id="choro-right-title">Vegetation Index (NDVI) · July</h2>
+          <p class="chart-note">
+            NDVI measures vegetation health — higher values mean greener, healthier crops.
+            Compare with the left map to see how vegetation responds to climate.
+          </p>
+          <div id="choro-right"></div>
+          <div id="legend-right" class="legend-bar-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 03: LINE CHART -->
+    <section class="dark-section">
+      <div class="section-intro">
+        <p class="section-label">Section 03</p>
+        <h2>Month-by-Month Patterns</h2>
+        <p>Iowa corn surges in June–August. Kansas wheat peaks early then crashes at harvest. Texas cotton rises slowly through summer heat. Switch variables to compare.</p>
+      </div>
+      <div class="chart-card">
+        <h2 id="line-title">Seasonal Trends — Vegetation Index (NDVI)</h2>
+        <p class="chart-note">
+          Each line shows how the selected variable changes month by month for each state.
+          Use the Variable dropdown above to switch between NDVI, LST, and Precipitation.
+        </p>
+        <div id="line-chart"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 04: SCATTER PLOTS -->
+    <section class="dark-section">
+      <div class="section-intro">
+        <p class="section-label">Section 04</p>
+        <h2>Does Climate Drive Vegetation?</h2>
+        <p>Each dot is one state in one month. Iowa achieves peak greenness at moderate temperatures — not the hottest. Crop type matters more than raw climate.</p>
+      </div>
+      <div class="charts">
+        <div class="chart-card">
+          <h2>LST vs Vegetation (NDVI)</h2>
+          <p class="chart-note">
+            Each dot is one state in one month. Hover for details.
+            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
+          </p>
+          <div id="scatter-lst"></div>
+        </div>
+        <div class="chart-card">
+          <h2>Precipitation vs Vegetation (NDVI)</h2>
+          <p class="chart-note">
+            Kansas receives heavy spring rain, yet Iowa out-greens them in summer —
+            suggesting crop type matters as much as rainfall.
+          </p>
+          <div id="scatter-precip"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 05: WRITEUP -->
+    <section class="dark-section">
+      <div class="section-intro">
+        <p class="section-label">Section 05</p>
+        <h2>What We Found</h2>
+        <p>The story of America's agricultural heartland unfolds in satellite data. What does it tell us about the future?</p>
+      </div>
+      <div class="writeup">
+        <div class="writeup-grid">
+          <div>
+            <h3>What have we done so far?</h3>
+            <p>
+              We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS
+              precipitation data for Iowa, Kansas, and Texas using Google Earth Engine,
+              enabling year-round monitoring of key climate and vegetation indicators.
+              We built a US map that highlights the three states with hover tooltips
+              displaying average climate metrics, providing geographic context for the analysis.
+              We created side-by-side choropleth maps with a month slider and variable
+              switching controls, allowing users to compare LST Day, LST Night, and precipitation
+              across all three states for any given month.
+              Finally, we built multi-line seasonal trend charts and scatter plots with
+              interactive tooltips to reveal how NDVI, LST, and precipitation interact
+              across Iowa, Kansas, and Texas throughout the year.
+            </p>
+          </div>
+          <div>
+            <h3>What will be most challenging to design?</h3>
+            <p>
+              Transitioning to sub-state choropleth maps at the county level will be our biggest
+              challenge, requiring substantial county-level raster and vector data that goes
+              beyond our current state-level aggregations.
+              The raster-to-vector aggregation process itself is technically complex — correctly
+              transforming satellite raster data into meaningful county boundaries without
+              distorting or losing spatial information demands careful handling.
+              Balancing two side-by-side interactive maps with distinct color scales while
+              keeping the month slider and variable selector responsive and intuitive will
+              require thoughtful layout and careful performance optimization.
+              Finally, ensuring that all interactions — tooltips, hover states, filtering, and
+              cross-chart synchronization — remain bug-free and cohesive across all four
+              visualization types is essential to delivering an intuitive user experience.
+            </p>
+          </div>
+          <div>
+            <h3>Data Sources</h3>
+            <p>
+              NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
+              MCD12Q1 (Land Cover). Precipitation from UCSB-CHG/CHIRPS/DAILY.
+              All data extracted via Google Earth Engine for the years 2015–2020,
+              averaged monthly across the three target states.
+            </p>
+          </div>
+          <div>
+            <h3>Visual Encoding</h3>
+            <p>
+              Choropleth maps use sequential color scales: green for NDVI, orange for LST,
+              and blue for precipitation. Line charts use distinct colors per state —
+              yellow for Iowa, green for Kansas, red-orange for Texas — consistent across
+              all visualizations. Scatter plots encode month as dot position and state as color.
+            </p>
+          </div>
+        </div>
+      </div>
       <div class="team-info">
         <p><strong>Team Members</strong></p>
         <ul>
@@ -31,150 +228,10 @@
       </div>
     </section>
 
-    <!-- MAIN FINDING -->
-    <section class="finding-card">
-      <h2>Research Question</h2>
-      <p>
-        How do seasonal patterns of precipitation, land surface temperature (LST),
-        and vegetation dynamics (NDVI) interact across major crop-producing regions
-        in Iowa (corn), Kansas (wheat), and Texas (cotton)?
-      </p>
-    </section>
-
-    <!-- US MAP -->
-    <section class="map-section">
-      <div class="chart-card">
-        <h2>Three States, Three Stories</h2>
-        <p class="chart-note">
-          Iowa, Kansas, and Texas each represent distinct agricultural and climatic zones.
-          Hover over a highlighted state to see its average climate data.
-        </p>
-        <div id="us-map"></div>
-      </div>
-    </section>
-
-    <!-- CONTROLS -->
-    <section class="controls">
-      <div class="control-group">
-        <label for="variable-select">Variable:</label>
-        <select id="variable-select">
-          <option value="LST_Day">Land Surface Temp — Day (°C)</option>
-          <option value="LST_Night">Land Surface Temp — Night (°C)</option>
-          <option value="Precipitation">Precipitation (mm)</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label for="month-slider">Month: </label>
-        <input type="range" id="month-slider" min="1" max="12" value="7" />
-        <span id="month-label">July</span>
-      </div>
-    </section>
-
-    <!-- CHOROPLETH MAPS -->
-    <section class="charts">
-      <div class="chart-card">
-        <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
-        <p class="chart-note">
-          Color intensity shows the selected variable's value for each state.
-          Use the controls above to switch variables and scrub through months.
-        </p>
-        <div id="choro-left"></div>
-        <div id="legend-left" class="legend-bar-container"></div>
-      </div>
-
-      <div class="chart-card">
-        <h2 id="choro-right-title">Vegetation Index (NDVI) · July</h2>
-        <p class="chart-note">
-          NDVI measures vegetation health — higher values mean greener, healthier crops.
-          Compare with the left map to see how vegetation responds to climate.
-        </p>
-        <div id="choro-right"></div>
-        <div id="legend-right" class="legend-bar-container"></div>
-      </div>
-    </section>
-
-    <!-- LINE CHART -->
-    <section class="map-section">
-      <div class="chart-card">
-        <h2 id="line-title">Seasonal Trends — Vegetation Index (NDVI)</h2>
-        <p class="chart-note">
-          Each line shows how the selected variable changes month by month for each state.
-          Use the Variable dropdown above to switch between NDVI, LST, and Precipitation.
-        </p>
-        <div id="line-chart"></div>
-      </div>
-    </section>
-
-    <!-- SCATTER -->
-    <section class="charts">
-      <div class="chart-card">
-        <h2>LST vs Vegetation (NDVI)</h2>
-        <p class="chart-note">
-          Each dot is one state in one month. Hover for details.
-          Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
-        </p>
-        <div id="scatter-lst"></div>
-      </div>
-      <div class="chart-card">
-        <h2>Precipitation vs Vegetation (NDVI)</h2>
-        <p class="chart-note">
-          Kansas receives heavy spring rain, yet Iowa out-greens them in summer —
-          suggesting crop type matters as much as rainfall.
-        </p>
-        <div id="scatter-precip"></div>
-      </div>
-    </section>
-
-    <!-- WRITEUP -->
-    <section class="writeup">
-      <h2>Write-up</h2>
-      <div class="writeup-grid">
-        <div>
-          <h3>What have we done so far?</h3>
-          <p>
-            We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS
-            precipitation data for Iowa, Kansas, and Texas using Google Earth Engine.
-            We built a D3.js interactive webpage with four visualization sections: a US map
-            highlighting the three states, choropleth color maps with a month slider,
-            multi-line seasonal trend charts with variable switching, and scatterplots
-            showing correlations between climate and vegetation variables.
-          </p>
-        </div>
-        <div>
-          <h3>What will be most challenging to design?</h3>
-          <p>
-            The most challenging part will be the choropleth maps at county or sub-state
-            resolution, which requires additional spatial data beyond current state-level
-            averages. Accurately mapping variation within each state demands raster-to-vector
-            aggregation at finer resolution. Balancing visual clarity across two side-by-side
-            maps while keeping the time slider intuitive will also require careful layout
-            and color scale decisions.
-          </p>
-        </div>
-        <div>
-          <h3>Data Sources</h3>
-          <p>
-            NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
-            MCD12Q1 (Land Cover). Precipitation from UCSB-CHG/CHIRPS/DAILY.
-            All data extracted via Google Earth Engine for the years 2015–2020,
-            averaged monthly across the three target states.
-          </p>
-        </div>
-        <div>
-          <h3>Visual Encoding</h3>
-          <p>
-            Choropleth maps use sequential color scales: green for NDVI, orange for LST,
-            and blue for precipitation. Line charts use distinct colors per state —
-            yellow for Iowa, green for Kansas, red-orange for Texas — consistent across
-            all visualizations. Scatter plots encode month as dot position and state as color.
-          </p>
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <div id="tooltip"></div>
   <script src="script.js"></script>
 </body>
 </html>
+
