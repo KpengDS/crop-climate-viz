@@ -35,6 +35,7 @@ let countyData = [];
 let currentVar   = "LST_Day";
 let currentMonth = 7;
 let usTopoCache  = null;
+let scatterActiveState = "All";
 
 // ── GEO CACHE ────────────────────────────────────────────────────────────────
 
@@ -76,7 +77,8 @@ Promise.all([
 
   drawUSMap();
   drawChoropleth();
-  drawLineChart();
+  drawLineCharts();
+  buildScatterButtons();
   drawScatter("scatter-lst",    "LST_Day");
   drawScatter("scatter-precip", "Precipitation");
 
@@ -84,7 +86,7 @@ Promise.all([
     currentVar = this.value;
     updateChoroTitles();
     drawChoropleth();
-    drawLineChart();
+    drawLineCharts();
   });
 
   d3.select("#month-slider").on("input", function() {
@@ -126,7 +128,7 @@ function updateChoroTitles() {
   const month = MONTHS[currentMonth - 1];
   d3.select("#choro-left-title").text(`${VAR_LABELS[currentVar]} · ${month}`);
   d3.select("#choro-right-title").text(`Vegetation Index (NDVI) · ${month}`);
-  d3.select("#line-title").text(`Seasonal Trends — ${VAR_LABELS[currentVar]}`);
+  d3.select("#line-left-title").text(`${VAR_LABELS[currentVar]} · Monthly`);
 }
 
 // ── US MAP ───────────────────────────────────────────────────────────────────
@@ -203,7 +205,7 @@ function drawUSMap() {
   });
 }
 
-// ── CHOROPLETH (county level) ─────────────────────────────────────────────────
+// ── CHOROPLETH ───────────────────────────────────────────────────────────────
 
 function drawChoropleth() {
   renderChoro("choro-left",  "legend-left",  currentVar, currentMonth);
@@ -224,24 +226,19 @@ function renderChoro(containerId, legendId, variable, month) {
   const colorScale = colorScaleFor(variable);
   const extent = d3.extent(countyData, d => d[variable]);
 
-  // Get county and state features
   const allCounties = topojson.feature(us, us.objects.counties);
   const allStates   = topojson.feature(us, us.objects.states);
-
   const targetStateFips = new Set(Object.values(STATE_FIPS));
 
-  // Filter counties belonging to our 3 states
   const threeCounties = allCounties.features.filter(f => {
     const statefp = String(f.id).padStart(5, "0").slice(0, 2);
     return targetStateFips.has(statefp);
   });
 
-  // Filter state borders for our 3 states
   const threeStates = allStates.features.filter(f =>
     targetStateFips.has(String(f.id).padStart(2, "0"))
   );
 
-  // Build county data lookup: GEOID -> value
   const monthRows = countyData.filter(d => d.month === month);
   const lookup = {};
   monthRows.forEach(d => { lookup[d.GEOID] = d; });
@@ -259,7 +256,6 @@ function renderChoro(containerId, legendId, variable, month) {
   ]);
   const path = d3.geoPath().projection(projection);
 
-  // Draw counties
   svg.selectAll("path.county")
     .data(threeCounties)
     .join("path")
@@ -289,7 +285,6 @@ function renderChoro(containerId, legendId, variable, month) {
       hideTooltip();
     });
 
-  // Draw state borders on top
   svg.selectAll("path.state-border")
     .data(threeStates)
     .join("path")
@@ -300,7 +295,6 @@ function renderChoro(containerId, legendId, variable, month) {
     .attr("stroke-width", 1.5)
     .attr("pointer-events", "none");
 
-  // State labels
   threeStates.forEach(f => {
     const id = String(f.id).padStart(2, "0");
     const name = Object.entries(STATE_FIPS).find(([s, fip]) => fip === id)?.[0];
@@ -321,11 +315,9 @@ function renderChoro(containerId, legendId, variable, month) {
       .text(STATE_CROPS[name]);
   });
 
-  // Legend bar
   const lW = Math.min(W - 40, 300), lH = 12;
   const legendSvg = d3.select(`#${legendId}`)
-    .append("svg")
-    .attr("viewBox", `0 0 ${W} 36`);
+    .append("svg").attr("viewBox", `0 0 ${W} 36`);
 
   const defs = legendSvg.append("defs");
   const gradId = `grad-${containerId}`;
@@ -336,35 +328,33 @@ function renderChoro(containerId, legendId, variable, month) {
       .attr("stop-color", colorScale(extent[0] + (extent[1] - extent[0]) * i / 10));
   }
   legendSvg.append("rect")
-    .attr("x", 20).attr("y", 4)
-    .attr("width", lW).attr("height", lH)
+    .attr("x", 20).attr("y", 4).attr("width", lW).attr("height", lH)
     .attr("rx", 4).attr("fill", `url(#${gradId})`);
-  legendSvg.append("text")
-    .attr("x", 20).attr("y", 30)
-    .attr("fill", "#777").attr("font-size", 10)
-    .text(extent[0].toFixed(1));
-  legendSvg.append("text")
-    .attr("x", 20 + lW).attr("y", 30)
+  legendSvg.append("text").attr("x", 20).attr("y", 30)
+    .attr("fill", "#777").attr("font-size", 10).text(extent[0].toFixed(1));
+  legendSvg.append("text").attr("x", 20 + lW).attr("y", 30)
     .attr("fill", "#777").attr("font-size", 10).attr("text-anchor", "end")
     .text(extent[1].toFixed(1));
 }
 
-// ── LINE CHART ───────────────────────────────────────────────────────────────
+// ── LINE CHARTS (binary) ──────────────────────────────────────────────────────
 
-function drawLineChart() {
-  const variable = currentVar;
+function drawLineCharts() {
+  drawSingleLineChart("line-chart-left",  currentVar);
+  drawSingleLineChart("line-chart-right", "NDVI");
+}
+
+function drawSingleLineChart(containerId, variable) {
   const margin = { top: 20, right: 30, bottom: 50, left: 60 };
-  const outerW = 860, outerH = 380;
+  const outerW = 540, outerH = 340;
   const W = outerW - margin.left - margin.right;
   const H = outerH - margin.top - margin.bottom;
 
-  let svg = d3.select("#line-chart").select("svg");
+  let svg = d3.select(`#${containerId}`).select("svg");
   if (svg.empty()) {
-    svg = d3.select("#line-chart")
-      .append("svg")
-      .attr("viewBox", `0 0 ${outerW} ${outerH}`);
-    svg.append("g")
-      .attr("class", "line-inner")
+    svg = d3.select(`#${containerId}`)
+      .append("svg").attr("viewBox", `0 0 ${outerW} ${outerH}`);
+    svg.append("g").attr("class", "line-inner")
       .attr("transform", `translate(${margin.left},${margin.top})`);
   }
   svg.select(".line-inner").selectAll("*").remove();
@@ -381,12 +371,12 @@ function drawLineChart() {
     .call(d3.axisBottom(xScale).ticks(12).tickFormat(i => MONTHS[i - 1]))
     .call(ax => ax.select(".domain").attr("stroke", "#666"))
     .call(ax => ax.selectAll(".tick line").attr("stroke", "#666"))
-    .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "12px"));
+    .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "11px"));
 
-  g.append("g").attr("class", "axis").call(d3.axisLeft(yScale).ticks(6))
+  g.append("g").attr("class", "axis").call(d3.axisLeft(yScale).ticks(5))
     .call(ax => ax.select(".domain").attr("stroke", "#666"))
     .call(ax => ax.selectAll(".tick line").attr("stroke", "#666"))
-    .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "12px"));
+    .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "11px"));
 
   g.append("text").attr("class", "axis-label")
     .attr("x", W / 2).attr("y", H + 42)
@@ -406,22 +396,21 @@ function drawLineChart() {
     const stateData = allData.filter(d => d.state === state).sort((a, b) => a.month - b.month);
     const color = STATE_COLORS[state];
 
-    g.append("path")
-      .datum(stateData)
-      .attr("class", `line-${state.toLowerCase()}`)
+    g.append("path").datum(stateData)
+      .attr("fill", "none")
+      .attr("stroke", color).attr("stroke-width", 2.5)
       .attr("d", line);
 
-    g.selectAll(`.dot-${state}`)
+    g.selectAll(`.dot-${state}-${containerId}`)
       .data(stateData)
       .join("circle")
       .attr("cx", d => xScale(d.month))
       .attr("cy", d => yScale(d[variable]))
-      .attr("r", 5)
+      .attr("r", 4)
       .attr("fill", color)
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 1.5)
+      .attr("stroke", "#fff").attr("stroke-width", 1.5)
       .on("mouseover", function(event, d) {
-        d3.select(this).attr("r", 7);
+        d3.select(this).attr("r", 6);
         showTooltip(`
           <strong>${d.state} — ${STATE_CROPS[d.state]}</strong><br>
           Month: ${MONTHS[d.month - 1]}<br>
@@ -429,60 +418,62 @@ function drawLineChart() {
         `, event);
       })
       .on("mousemove", moveTooltip)
-      .on("mouseout", function() {
-        d3.select(this).attr("r", 5);
-        hideTooltip();
-      });
+      .on("mouseout", function() { d3.select(this).attr("r", 4); hideTooltip(); });
   });
 
-  const legend = g.append("g").attr("transform", `translate(${W - 180}, 10)`);
+  // Legend
+  const legend = g.append("g").attr("transform", `translate(${W - 160}, 10)`);
   ["Iowa", "Kansas", "Texas"].forEach((state, i) => {
-    const item = legend.append("g").attr("transform", `translate(0, ${i * 22})`);
-    item.append("circle").attr("r", 5).attr("fill", STATE_COLORS[state]);
-    item.append("text").attr("x", 12).attr("y", 4)
-      .attr("font-size", 12).attr("fill", "#444")
+    const item = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
+    item.append("circle").attr("r", 4).attr("fill", STATE_COLORS[state]);
+    item.append("text").attr("x", 10).attr("y", 4)
+      .attr("font-size", 11).attr("fill", "#444")
       .text(`${state} (${STATE_CROPS[state]})`);
+  });
+}
+
+// ── SCATTER BUTTONS (shared) ──────────────────────────────────────────────────
+
+function buildScatterButtons() {
+  const row = d3.select("#scatter-filter-row");
+  row.selectAll("*").remove();
+
+  ["All", "Iowa", "Kansas", "Texas"].forEach(state => {
+    row.append("button")
+      .attr("class", `scatter-btn${state === "All" ? " active" : ""}`)
+      .style("background", state === "All" ? "#3a6ea5" : "#f0ede8")
+      .style("color", state === "All" ? "#fff" : "#444")
+      .text(state === "All" ? "All States" : `${state} (${STATE_CROPS[state]})`)
+      .on("click", function() {
+        scatterActiveState = state;
+        row.selectAll(".scatter-btn")
+          .style("background", function() {
+            return d3.select(this).text().startsWith(state === "All" ? "All" : state) ? "#3a6ea5" : "#f0ede8";
+          })
+          .style("color", function() {
+            return d3.select(this).text().startsWith(state === "All" ? "All" : state) ? "#fff" : "#444";
+          });
+        drawScatter("scatter-lst",    "LST_Day");
+        drawScatter("scatter-precip", "Precipitation");
+      });
   });
 }
 
 // ── SCATTER ──────────────────────────────────────────────────────────────────
 
 function drawScatter(containerId, xVar) {
-  const wrapper = d3.select(`#${containerId}`);
-  wrapper.selectAll("*").remove();
-
-  // State filter buttons
-  let activeState = "All";
-  const btnRow = wrapper.append("div").attr("class", "scatter-btn-row");
-
-  ["All", "Iowa", "Kansas", "Texas"].forEach(state => {
-    btnRow.append("button")
-      .attr("class", `scatter-btn ${state === "All" ? "active" : ""}`)
-      .attr("data-state", state)
-      .style("background", state === "All" ? "#3a6ea5" : "#f0ede8")
-      .style("color", state === "All" ? "#fff" : "#444")
-      .text(state === "All" ? "All States" : `${state} (${STATE_CROPS[state]})`)
-      .on("click", function() {
-        activeState = state;
-        btnRow.selectAll(".scatter-btn")
-          .style("background", d => d === state ? "#3a6ea5" : "#f0ede8")
-          .style("color", d => d === state ? "#fff" : "#444");
-        // re-bind active class
-        btnRow.selectAll(".scatter-btn").classed("active", d => d === state);
-        updateDots();
-      });
-  });
-
-  // bind data to buttons for click handler
-  btnRow.selectAll(".scatter-btn").data(["All", "Iowa", "Kansas", "Texas"]);
+  d3.select(`#${containerId}`).selectAll("*").remove();
 
   const margin = { top: 20, right: 30, bottom: 55, left: 60 };
   const outerW = 540, outerH = 360;
   const W = outerW - margin.left - margin.right;
   const H = outerH - margin.top - margin.bottom;
 
-  const svg = wrapper.append("svg").attr("viewBox", `0 0 ${outerW} ${outerH}`);
+  const svg = d3.select(`#${containerId}`)
+    .append("svg").attr("viewBox", `0 0 ${outerW} ${outerH}`);
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const filtered = scatterActiveState === "All" ? allData : allData.filter(d => d.state === scatterActiveState);
 
   const xExt = d3.extent(allData, d => d[xVar]);
   const xPad = (xExt[1] - xExt[0]) * 0.08;
@@ -492,7 +483,6 @@ function drawScatter(containerId, xVar) {
   const xScale = d3.scaleLinear().domain([xExt[0] - xPad, xExt[1] + xPad]).range([0, W]);
   const yScale = d3.scaleLinear().domain([yExt[0] - yPad, yExt[1] + yPad]).range([H, 0]);
 
-  // Axes
   g.append("g")
     .attr("transform", `translate(0,${H})`)
     .call(d3.axisBottom(xScale).ticks(7))
@@ -500,8 +490,7 @@ function drawScatter(containerId, xVar) {
     .call(ax => ax.selectAll(".tick line").attr("stroke", "#666"))
     .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "12px"));
 
-  g.append("g")
-    .call(d3.axisLeft(yScale).ticks(6))
+  g.append("g").call(d3.axisLeft(yScale).ticks(6))
     .call(ax => ax.select(".domain").attr("stroke", "#666"))
     .call(ax => ax.selectAll(".tick line").attr("stroke", "#666"))
     .call(ax => ax.selectAll(".tick text").attr("fill", "#333").attr("font-size", "12px"));
@@ -515,83 +504,48 @@ function drawScatter(containerId, xVar) {
     .attr("x", -H / 2).attr("y", -48)
     .attr("text-anchor", "middle").text("NDVI");
 
-  // NDVI threshold annotations
-  const thresholds = [
-    { y: 0.3, label: "Emergence (0.2–0.4)", color: "#aaa" },
-    { y: 0.7, label: "Peak Greenness (0.6–0.8)", color: "#4caf50" }
-  ];
-
-  thresholds.forEach(t => {
+  // NDVI threshold lines
+  [{ y: 0.3, label: "Emergence (0.2–0.4)", color: "#aaa" },
+   { y: 0.7, label: "Peak Greenness (0.6–0.8)", color: "#4caf50" }
+  ].forEach(t => {
     if (t.y >= yScale.domain()[0] && t.y <= yScale.domain()[1]) {
       g.append("line")
         .attr("x1", 0).attr("x2", W)
         .attr("y1", yScale(t.y)).attr("y2", yScale(t.y))
-        .attr("stroke", t.color)
-        .attr("stroke-width", 1.2)
-        .attr("stroke-dasharray", "5,4")
-        .attr("opacity", 0.7);
+        .attr("stroke", t.color).attr("stroke-width", 1.2)
+        .attr("stroke-dasharray", "5,4").attr("opacity", 0.7);
       g.append("text")
         .attr("x", W - 4).attr("y", yScale(t.y) - 5)
-        .attr("text-anchor", "end")
-        .attr("fill", t.color)
-        .attr("font-size", 10)
+        .attr("text-anchor", "end").attr("fill", t.color).attr("font-size", 10)
         .text(t.label);
     }
   });
 
-  // Dots group
-  const dotsG = g.append("g").attr("class", "dots-group");
+  filtered.forEach(d => {
+    const color = STATE_COLORS[d.state];
+    g.append("circle")
+      .attr("cx", xScale(d[xVar])).attr("cy", yScale(d.NDVI))
+      .attr("r", 6).attr("fill", color).attr("opacity", 0.75)
+      .attr("stroke", "#fff").attr("stroke-width", 1)
+      .on("mouseover", function(event) {
+        d3.select(this).attr("r", 9).attr("opacity", 1);
+        showTooltip(`
+          <strong>${d.state} — ${STATE_CROPS[d.state]}</strong><br>
+          Month: ${MONTHS[d.month - 1]}<br>
+          ${VAR_LABELS[xVar]}: ${d[xVar].toFixed(2)}<br>
+          NDVI: ${d.NDVI.toFixed(3)}
+        `, event);
+      })
+      .on("mousemove", moveTooltip)
+      .on("mouseout", function() {
+        d3.select(this).attr("r", 6).attr("opacity", 0.75);
+        hideTooltip();
+      });
 
-  function updateDots() {
-    const filtered = activeState === "All" ? allData : allData.filter(d => d.state === activeState);
-
-    const circles = dotsG.selectAll("circle").data(filtered, d => d.state + d.month);
-    circles.join(
-      enter => enter.append("circle")
-        .attr("cx", d => xScale(d[xVar]))
-        .attr("cy", d => yScale(d.NDVI))
-        .attr("r", 6)
-        .attr("fill", d => STATE_COLORS[d.state])
-        .attr("opacity", 0.75)
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1)
-        .on("mouseover", function(event, d) {
-          d3.select(this).attr("r", 9).attr("opacity", 1);
-          showTooltip(`
-            <strong>${d.state} — ${STATE_CROPS[d.state]}</strong><br>
-            Month: ${MONTHS[d.month - 1]}<br>
-            ${VAR_LABELS[xVar]}: ${d[xVar].toFixed(2)}<br>
-            NDVI: ${d.NDVI.toFixed(3)}
-          `, event);
-        })
-        .on("mousemove", moveTooltip)
-        .on("mouseout", function() {
-          d3.select(this).attr("r", 6).attr("opacity", 0.75);
-          hideTooltip();
-        }),
-      update => update
-        .attr("cx", d => xScale(d[xVar]))
-        .attr("cy", d => yScale(d.NDVI)),
-      exit => exit.remove()
-    );
-
-    const labels = dotsG.selectAll("text.dot-label").data(filtered, d => d.state + d.month);
-    labels.join(
-      enter => enter.append("text")
-        .attr("class", "dot-label")
-        .attr("x", d => xScale(d[xVar]))
-        .attr("y", d => yScale(d.NDVI) + 4)
-        .attr("text-anchor", "middle")
-        .attr("font-size", 7).attr("font-weight", 700)
-        .attr("fill", "#fff")
-        .attr("pointer-events", "none")
-        .text(d => MONTHS[d.month - 1].slice(0, 1)),
-      update => update
-        .attr("x", d => xScale(d[xVar]))
-        .attr("y", d => yScale(d.NDVI) + 4),
-      exit => exit.remove()
-    );
-  }
-
-  updateDots();
+    g.append("text")
+      .attr("x", xScale(d[xVar])).attr("y", yScale(d.NDVI) + 4)
+      .attr("text-anchor", "middle").attr("font-size", 7).attr("font-weight", 700)
+      .attr("fill", "#fff").attr("pointer-events", "none")
+      .text(MONTHS[d.month - 1].slice(0, 1));
+  });
 }

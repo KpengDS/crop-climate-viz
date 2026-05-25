@@ -62,25 +62,21 @@
       </div>
     </section>
 
-
-
-
     <!-- SECTION 02: CHOROPLETH MAPS -->
     <section class="dark-section">
       <div class="section-intro">
         <p class="section-label">Section 02</p>
         <h2>Climate Across the Seasons</h2>
-        <p>Use the slider to move through each month. The left map shows LST or 
-          Precipitation intensity; the right always shows NDVI. Try dragging from 
-          January to July and watch Texas heat up while Iowa becomes greener. 
-          You can also see that regions of higher LST generally has lower NDVI. 
+        <p>Use the slider to move through each month. The left map shows LST or
+          Precipitation intensity; the right always shows NDVI. Try dragging from
+          January to July and watch Texas heat up while Iowa becomes greener.
+          You can also see that regions of higher LST generally has lower NDVI.
           While regions of more precipitation has more NDVI.
         </p>
       </div>
-    </section>
 
       <!-- CONTROLS -->
-      <section class="dark-section sticky-controls">
+      <div class="sticky-controls">
         <div class="controls">
           <div class="control-group">
             <label for="variable-select">Variable:</label>
@@ -96,13 +92,13 @@
             <span id="month-label">July</span>
           </div>
         </div>
-      </section>
+      </div>
 
       <div class="charts">
         <div class="chart-card">
           <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
           <p class="chart-note">
-            Color intensity shows the selected variable's value for each state.
+            Color intensity shows the selected variable's value for each county.
             Use the controls above to switch variables and scrub through months.
           </p>
           <div id="choro-left"></div>
@@ -120,22 +116,27 @@
       </div>
     </section>
 
-    <!-- SECTION 03: LINE CHART -->
+    <!-- SECTION 03: LINE CHART (binary) -->
     <section class="dark-section">
       <div class="section-intro">
         <p class="section-label">Section 03</p>
         <h2>Month-by-Month Patterns</h2>
-        <p>In the left plot, each line shows each state's climate condition of LST and NDVI 
+        <p>In the left plot, each line shows each state's climate condition of LST and Precipitation
           under January to December. In the right plot, each line shows each state's NDVI change.
-          Use the Variable dropdown above to switch between LST and Precipitation. 
+          Use the Variable dropdown above to switch between LST and Precipitation.
           The LST line plot shows that cotton tends to thrive in hotter region, while corn in coolest.</p>
       </div>
-      <div class="chart-card">
-        <h2 id="line-title">Seasonal Trends — Vegetation Index (NDVI)</h2>
-        <p class="chart-note">
-          Each line shows how the selected variable changes month by month for each state. Use the Variable dropdown above to switch between LST and Precipitation.
-        </p>
-        <div id="line-chart"></div>
+      <div class="charts">
+        <div class="chart-card">
+          <h2 id="line-left-title">Land Surface Temp — Day · Monthly</h2>
+          <p class="chart-note">Controlled by the Variable selector above.</p>
+          <div id="line-chart-left"></div>
+        </div>
+        <div class="chart-card">
+          <h2>Vegetation Index (NDVI) · Monthly</h2>
+          <p class="chart-note">NDVI shows vegetation health across the year for each state.</p>
+          <div id="line-chart-right"></div>
+        </div>
       </div>
     </section>
 
@@ -146,12 +147,16 @@
         <h2>Does Climate Drive Vegetation?</h2>
         <p>Each dot is one state in one month. Iowa achieves peak greenness at moderate temperatures — not the hottest. Crop type matters more than raw climate.</p>
       </div>
+
+      <!-- Shared filter buttons -->
+      <div id="scatter-filter-row" class="scatter-btn-row" style="margin-bottom:16px"></div>
+
       <div class="charts">
         <div class="chart-card">
           <h2>LST vs Vegetation (NDVI)</h2>
           <p class="chart-note">
             Each dot is one state in one month. Hover for details.
-            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures. 
+            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
             Kansas's wheat also rises sharply in summer in temperature higher than that of corn.
           </p>
           <div id="scatter-lst"></div>
@@ -207,7 +212,7 @@
               Finally, ensuring that all interactions — tooltips, hover states, filtering, and
               cross-chart synchronization — remain bug-free and cohesive across all four
               visualization types is essential to delivering an intuitive user experience.
-              Moreover, the creative way of telling the clear story of the research topic for 
+              Moreover, the creative way of telling the clear story of the research topic for
               our project by scrollytelling is also a challenging part.
             </p>
           </div>
