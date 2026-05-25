@@ -62,32 +62,42 @@
       </div>
     </section>
 
-    <!-- CONTROLS -->
-    <section class="dark-section sticky-controls">
-      <div class="controls">
-        <div class="control-group">
-          <label for="variable-select">Variable:</label>
-          <select id="variable-select">
-            <option value="LST_Day">Land Surface Temp — Day (°C)</option>
-            <option value="LST_Night">Land Surface Temp — Night (°C)</option>
-            <option value="Precipitation">Precipitation (mm)</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="month-slider">Month: </label>
-          <input type="range" id="month-slider" min="1" max="12" value="7" />
-          <span id="month-label">July</span>
-        </div>
-      </div>
-    </section>
+
+
 
     <!-- SECTION 02: CHOROPLETH MAPS -->
     <section class="dark-section">
       <div class="section-intro">
         <p class="section-label">Section 02</p>
         <h2>Climate Across the Seasons</h2>
-        <p>Use the slider to move through each month. The left map shows LST or Precipitation intensity; the right always shows NDVI. Try dragging from January to July and watch Texas heat up while Iowa stays green.</p>
+        <p>Use the slider to move through each month. The left map shows LST or 
+          Precipitation intensity; the right always shows NDVI. Try dragging from 
+          January to July and watch Texas heat up while Iowa becomes greener. 
+          You can also see that regions of higher LST generally has lower NDVI. 
+          While regions of more precipitation has more NDVI.
+        </p>
       </div>
+    </section>
+
+      <!-- CONTROLS -->
+      <section class="dark-section sticky-controls">
+        <div class="controls">
+          <div class="control-group">
+            <label for="variable-select">Variable:</label>
+            <select id="variable-select">
+              <option value="LST_Day">Land Surface Temp — Day (°C)</option>
+              <option value="LST_Night">Land Surface Temp — Night (°C)</option>
+              <option value="Precipitation">Precipitation (mm)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="month-slider">Month: </label>
+            <input type="range" id="month-slider" min="1" max="12" value="7" />
+            <span id="month-label">July</span>
+          </div>
+        </div>
+      </section>
+
       <div class="charts">
         <div class="chart-card">
           <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
@@ -115,13 +125,15 @@
       <div class="section-intro">
         <p class="section-label">Section 03</p>
         <h2>Month-by-Month Patterns</h2>
-        <p>Iowa corn surges in June–August. Kansas wheat peaks early then crashes at harvest. Texas cotton rises slowly through summer heat. Switch variables to compare.</p>
+        <p>In the left plot, each line shows each state's climate condition of LST and NDVI 
+          under January to December. In the right plot, each line shows each state's NDVI change.
+          Use the Variable dropdown above to switch between LST and Precipitation. 
+          The LST line plot shows that cotton tends to thrive in hotter region, while corn in coolest.</p>
       </div>
       <div class="chart-card">
         <h2 id="line-title">Seasonal Trends — Vegetation Index (NDVI)</h2>
         <p class="chart-note">
-          Each line shows how the selected variable changes month by month for each state.
-          Use the Variable dropdown above to switch between LST and Precipitation.
+          Each line shows how the selected variable changes month by month for each state. Use the Variable dropdown above to switch between LST and Precipitation.
         </p>
         <div id="line-chart"></div>
       </div>
@@ -139,7 +151,8 @@
           <h2>LST vs Vegetation (NDVI)</h2>
           <p class="chart-note">
             Each dot is one state in one month. Hover for details.
-            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
+            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures. 
+            Kansas's wheat also rises sharply in summer in temperature higher than that of corn.
           </p>
           <div id="scatter-lst"></div>
         </div>
@@ -194,6 +207,8 @@
               Finally, ensuring that all interactions — tooltips, hover states, filtering, and
               cross-chart synchronization — remain bug-free and cohesive across all four
               visualization types is essential to delivering an intuitive user experience.
+              Moreover, the creative way of telling the clear story of the research topic for 
+              our project by scrollytelling is also a challenging part.
             </p>
           </div>
           <div>
