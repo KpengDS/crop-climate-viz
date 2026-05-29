@@ -3,253 +3,512 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crop, Climate & Seasons</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://unpkg.com/topojson-client@3"></script>
-</head>
+  <title>Beyond the State Average</title>
+  <meta name="description" content="How MODIS satellite data reveals what state averages have been hiding from us — an interactive exploration of climate and crops across Iowa, Kansas, and Texas." />
 
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231F4E79'/%3E%3Cpath d='M30 70 Q 50 30 70 70' stroke='%23E0A82E' stroke-width='8' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='38' r='6' fill='%236FA34B'/%3E%3C/svg%3E" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Libs -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/scrollama@3.2.0/build/scrollama.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
 <body>
-  <!-- HERO SECTION -->
-  <section class="hero">
+
+  <!-- ============== HERO ============== -->
+  <section id="hero" class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="bg-grid"></div>
+    </div>
     <div class="hero-content">
-      <p class="eyebrow">DSC 106 · Final Project · GeoInsight</p>
-      <h1>How Do Seasons Shape Crops & Climate?</h1>
-      <p class="hero-subtitle">
-        Track vegetation health, temperature, and rainfall across Iowa's corn, Kansas's wheat, and Texas's cotton.
-        Discover how climate patterns drive crop yields month by month.
+      <div class="eyebrow">DSC 106 · UC San Diego</div>
+      <h1 class="hero-title">
+        Beyond the <span class="ink-blue">State&nbsp;Average</span>
+      </h1>
+      <p class="hero-sub">
+        A county-by-county look, revealed by satellite imagery, of the climate stress shaping
+        <span class="state-tag iowa">Iowa</span>'s corn,
+        <span class="state-tag kansas">Kansas</span>'s wheat, and
+        <span class="state-tag texas">Texas</span>'s cotton.
       </p>
-      <div class="crop-badges">
-        <div class="badge badge-iowa">🌽 Iowa · Corn</div>
-        <div class="badge badge-kansas">🌾 Kansas · Wheat</div>
-        <div class="badge badge-texas">🪴 Texas · Cotton</div>
+
+      <ul class="hero-stats" aria-label="Project at a glance">
+        <li><strong>458</strong><span>counties</span></li>
+        <li><strong>5,496</strong><span>monthly observations</span></li>
+        <li><strong>4</strong><span>climate variables</span></li>
+        <li><strong>6</strong><span>interactive visualizations</span></li>
+      </ul>
+
+      <hr class="hero-rule" />
+
+      <!-- TODO: replace href with your YouTube URL once the demo is recorded -->
+      <div class="hero-meta">
+        <div class="byline">
+          <span class="byline-label">A project by</span>
+          <span class="byline-names">Zihan Zhang, Baoyi Wan, Kangxin Peng, Yadushan Thillainathan</span>
+          <span class="byline-pub">Published May 2026</span>
+        </div>
+        <a class="video-pill" href="#TODO-youtube-url" target="_blank" rel="noopener">
+          <span class="video-icon">▶</span>
+          <span>Watch the 2-minute demo</span>
+        </a>
       </div>
-      <div class="hero-team">
-        <span>Zihan Zhang</span>
-        <span>Baoyi Wan</span>
-        <span>Kangxin Peng</span>
-        <span>Yadushan Thillainathan</span>
+
+      <div class="hero-cta">
+        <span class="scroll-hint">scroll to begin</span>
+        <div class="scroll-arrow"></div>
       </div>
-      <p class="scroll-hint">↓ scroll to explore</p>
     </div>
   </section>
 
-  <main>
-    <!-- SECTION 01: US MAP -->
-    <section class="dark-section">
-      <div class="section-intro">
-        <p class="section-label">Section 01</p>
-        <h2>Three States, Three Stories</h2>
-        <p>Iowa, Kansas, and Texas each represent distinct agricultural and climatic zones. Hover over a highlighted state to see its average climate data.</p>
-      </div>
-      <div class="chart-card">
-        <p class="chart-note">
-          These three states form the heart of American agriculture. Each has a unique relationship between climate and crops.
-        </p>
-        <div id="us-map"></div>
-      </div>
-    </section>
+  <!-- ============== SETUP — meet the three states ============== -->
+  <section id="setup" class="section">
+    <div class="container narrow">
+      <p class="kicker">The Setup</p>
+      <h2 class="display">Three states fuel a nation.</h2>
+      <p class="lede">
+        The backbone of a country is its agriculture. The United States, in particular, has some states responsible for a large part of it. 
+        Iowa, Kansas, and Texas grow the corn in your tortilla chips, the wheat in your bread, and the cotton in your t-shirt. 
+        Together, they form the engine that fuels American agriculture. 
+        However, each state's agriculture is largely affected by the climate in which they grow.
+      </p>
+    </div>
 
-    <!-- RESEARCH QUESTION CARD -->
-    <section class="dark-section">
-      <div class="finding-card">
-        <h2>Research Question</h2>
+    <div class="container wide">
+      <div id="intro-map" class="intro-map"></div>
+      <p class="map-hint" aria-hidden="true">
+        <span class="map-hint-dot"></span>
+        Hover any <strong>highlighted state</strong> to reveal its crop story.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============== CONFLICT — the state-average lie ============== -->
+  <section id="conflict" class="section section-tint">
+    <div class="container narrow">
+      <p class="kicker">The Conflict</p>
+
+      <p class="stakes">
+        This climate information is extremely important. The turnout of produce affects the price at which it can be sold, 
+        and traders in the industry have to constantly keep track of the satellite NDVI to keep up. However, having the same average across the state,
+        is problematic because the entire state does not have the exact same climate, and by grouping the entire region as if it did, leads to an inaccurate
+        estimate of what the produce should cost.
+      </p>
+
+      <h2 class="display">The problem with the state average</h2>
+      <p class="lede">
+        Encompassing the entire state with one number is not accurate to the real climate of a state.
+        Western Kansas is a desert, while Eastern Kansas is humid. Despite this, most climate dashboards will represent this with a single number
+        that ends up not being indicative of the real story.
+      </p>
+
+      <!-- Master °C / °F preference — placed here, where readers first
+           encounter selectable temperature data. Single instance,
+           re-renders every chart, tooltip, axis, and inline number on
+           the page. -->
+      <aside class="prefs-callout" aria-label="Reader preference: temperature unit">
+        <div class="prefs-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="34" height="34">
+            <rect x="13" y="3"  width="6"  height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="16" cy="24" r="5" fill="currentColor"/>
+            <rect x="15" y="6"  width="2" height="14" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="prefs-content">
+          <span class="prefs-eyebrow">A reader preference · pick your unit</span>
+          <h3 class="prefs-question">Read temperatures in <em>°C</em> or <em>°F</em>?</h3>
+          <p class="prefs-hint">
+            Every choropleth tick, axis label, tooltip, and inline number
+            will switch in place depending on your preference.
+          </p>
+        </div>
+        <div class="unit-toggle large" role="group" aria-label="Temperature unit (site-wide)">
+          <button class="unit-btn active" data-unit="C" aria-pressed="true">°C</button>
+          <button class="unit-btn" data-unit="F" aria-pressed="false">°F</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="container wide">
+      <figure class="reveal-card reveal-spotlight">
+        <figcaption>
+          <h4>Inside the average</h4>
+          <p>
+            The big number beside each state is what is typically reported by most dashboards. 
+            The colored texture across the state is the actual climate across
+            458 counties. <strong>Hover over any county</strong>
+            to read the differene from the reported state mean.
+          </p>
+        </figcaption>
+        <div id="county-choropleth-preview" class="map-frame"></div>
+      </figure>
+      <div class="reveal-control">
+        <label for="reveal-var">Variable:</label>
+        <select id="reveal-var">
+          <option value="NDVI">Vegetation Index (NDVI)</option>
+          <option value="LST_Day">Land Surface Temp — Day</option>
+          <option value="LST_Night">Land Surface Temp — Night</option>
+          <option value="Precipitation">Precipitation (mm)</option>
+        </select>
+        <label for="reveal-month">Month: <strong id="reveal-month-label">July</strong></label>
+        <input type="range" id="reveal-month" min="1" max="12" value="7" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== RESOLUTION — the Time Machine ============== -->
+  <section id="time-machine" class="section">
+    <div class="container narrow">
+      <p class="kicker">The Resolution · Our flagship tool</p>
+      <h2 class="display">A <span class="ink-blue">time machine</span> for America's farms.</h2>
+      <p class="lede">
+        Scroll through seven moments of the agricultural year or drive the
+        visualization yourself. Hover over any county to see its entire 12-month story
+        unfold in the panel below.
+      </p>
+    </div>
+
+    <div class="container wide tm-scrolly-wrap">
+      <div class="tm-sticky-stage">
+        <div class="tm-shell">
+
+          <header class="tm-caption" id="tm-caption">
+            <div class="cap-eyebrow">
+              <span id="cap-counter">Scene 1 of 7</span>
+              <span class="cap-sep">·</span>
+              <span id="cap-eyebrow">January</span>
+            </div>
+            <h3 id="cap-title">The world is asleep.</h3>
+            <p  id="cap-body">In winter, the land is dormant across all three states. NDVI hovers near zero everywhere.</p>
+          </header>
+
+          <div class="tm-controls">
+            <div class="tm-control-row">
+              <button id="tm-play" class="play-btn" aria-label="Play animation">
+                <span class="play-icon">▶</span>
+                <span class="play-label">Play the year</span>
+              </button>
+
+              <div class="tm-var-toggle" role="tablist" aria-label="Choose variable">
+                <button class="var-btn active" data-var="NDVI" role="tab">NDVI</button>
+                <button class="var-btn" data-var="LST_Day" role="tab">LST Day</button>
+                <button class="var-btn" data-var="LST_Night" role="tab">LST Night</button>
+                <button class="var-btn" data-var="Precipitation" role="tab">Precip</button>
+              </div>
+
+              <button id="tm-reset" class="tm-reset" aria-label="Replay the story">
+                <span class="reset-icon">↻</span>
+                <span>Replay story</span>
+              </button>
+            </div>
+
+            <div class="tm-control-row">
+              <div class="month-scrubber">
+                <div class="month-ticks" id="month-ticks"></div>
+                <input type="range" id="tm-month" min="1" max="12" value="1" step="1" />
+                <div class="month-label-row">
+                  <span class="month-label" id="tm-month-label">January</span>
+                  <span class="month-helper">drag, or press play</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tm-stage">
+            <div class="tm-map-wrap" id="tm-iowa">
+              <div class="tm-map-header"><h4>Iowa</h4><span class="muted">Corn</span></div>
+              <div class="tm-map"></div>
+            </div>
+            <div class="tm-map-wrap" id="tm-kansas">
+              <div class="tm-map-header"><h4>Kansas</h4><span class="muted">Wheat</span></div>
+              <div class="tm-map"></div>
+            </div>
+            <div class="tm-map-wrap" id="tm-texas">
+              <div class="tm-map-header"><h4>Texas</h4><span class="muted">Cotton</span></div>
+              <div class="tm-map"></div>
+            </div>
+          </div>
+
+          <div class="tm-legend">
+            <div class="legend-band" id="tm-legend"></div>
+            <div class="legend-axis" id="tm-legend-axis"></div>
+          </div>
+
+          <div class="tm-hover-panel" id="tm-hover">
+            <div class="hover-placeholder">Hover any county to reveal its full-year story →</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Invisible scroll triggers — each provides 90vh of scroll length per scene -->
+      <div class="tm-steps" id="tm-steps">
+        <div class="tm-step" data-scene="0"></div>
+        <div class="tm-step" data-scene="1"></div>
+        <div class="tm-step" data-scene="2"></div>
+        <div class="tm-step" data-scene="3"></div>
+        <div class="tm-step" data-scene="4"></div>
+        <div class="tm-step" data-scene="5"></div>
+        <div class="tm-step tm-step-final" data-scene="6"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== LIFECYCLE — radial crop calendar ============== -->
+  <section id="lifecycle" class="section section-dark">
+    <div class="container narrow">
+      <p class="kicker">The Lifecycle</p>
+      <h2 class="display light">Every crop draws its own ring.</h2>
+      <p class="lede light">
+        Read the year clockwise from January. The further the line from center,
+        the greener the land. Iowa explodes upward as corn matures in July,
+        Kansas climbs steadily and stays high through summer, while Texas
+        peaks early in May and then dips as the climate gets warmer.
+      </p>
+    </div>
+
+    <div class="container wide">
+      <div id="radial-calendar" class="radial-calendar"></div>
+      <div class="legend-row">
+        <span class="lg-group">
+          <span class="lg-dot iowa"></span> Iowa · Corn
+          <span class="lg-dot kansas"></span> Kansas · Wheat
+          <span class="lg-dot texas"></span> Texas · Cotton
+        </span>
+        <span class="lg-divider"></span>
+        <span class="lg-group muted-rings">
+          <span class="lg-ring"></span> Dashed rings:
+          <span class="lg-pill">0.3 Emergence</span>
+          <span class="lg-pill">0.5 Mid</span>
+          <span class="lg-pill">0.7 Peak Greenness</span>
+        </span>
+      </div>
+
+      <aside class="method-note">
+        <span class="note-eyebrow">A note on overlapping rings</span>
         <p>
-          How do seasonal patterns of precipitation, land surface temperature (LST),
-          and vegetation dynamics (NDVI) interact across major crop-producing regions
-          in Iowa (corn), Kansas (wheat), and Texas (cotton)?
+          Each ring traces one state's monthly NDVI at its exact value. 
+          In places where two rings <em>run close together</em>,
+          we can see the states reached similar greenness that month.
+          Hover any dot to read
+          its exact NDVI.
         </p>
-      </div>
-    </section>
+      </aside>
+    </div>
+  </section>
 
-    <!-- SECTION 02: CHOROPLETH MAPS -->
-    <section class="dark-section">
-      <div class="section-intro">
-        <p class="section-label">Section 02</p>
-        <h2>Climate Across the Seasons</h2>
-        <p>Use the slider to move through each month. The left map shows LST or
-          Precipitation intensity; the right always shows NDVI. Try dragging from
-          January to July and watch Texas heat up while Iowa becomes greener.
-          You can also see that regions of higher LST generally has lower NDVI.
-          While regions of more precipitation has more NDVI.
+  <!-- ============== SCATTER — relationships ============== -->
+  <section id="scatter" class="section">
+    <div class="container narrow">
+      <p class="kicker">The Relationships</p>
+      <h2 class="display">Heat and rain do not love crops equally.</h2>
+      <p class="lede">
+        Each dot is one state in one month. The line connecting points is an indicator 
+        of time sequence from January to December. By observing what happens when we isolate
+        a single crop, we begin to see three very different stories of the relationship between climate and vegetation.
+      </p>
+    </div>
+
+    <div class="container wide">
+      <div class="state-filter" id="scatter-filter" role="tablist">
+        <button class="filter-btn active" data-state="all" role="tab">All States</button>
+        <button class="filter-btn" data-state="Iowa" role="tab">Iowa (Corn)</button>
+        <button class="filter-btn" data-state="Kansas" role="tab">Kansas (Wheat)</button>
+        <button class="filter-btn" data-state="Texas" role="tab">Texas (Cotton)</button>
+      </div>
+
+      <div class="scatter-grid">
+        <figure class="scatter-card">
+          <h4>LST Day Temperature vs Vegetation</h4>
+          <p class="figure-sub">Land Surface Temp — Day (<span class="unit-text">°C</span>) on x-axis · NDVI on y-axis</p>
+          <p class="figure-note">
+            Texas is consistently the hottest every month, but Iowa's more moderate
+            daytime soil temperatures push NDVI the highest.
+            <strong>Heat alone doesn't decide greenness. Crop choice and
+            moisture act as limiting factors.</strong>
+          </p>
+          <div id="scatter-lst" class="scatter-frame"></div>
+        </figure>
+
+        <figure class="scatter-card">
+          <h4>LST Night Temperature vs Vegetation</h4>
+          <p class="figure-sub">Land Surface Temp — Night (<span class="unit-text">°C</span>) on x-axis · NDVI on y-axis</p>
+          <p class="figure-note">
+            Day and Night LST track each other tightly across counties, but by plotting Night against NDVI, 
+            we see thatthe cluster grows visibly tighter.
+            <strong>Plants feel the night more than they feel the day.</strong>
+          </p>
+          <div id="scatter-lst-night" class="scatter-frame"></div>
+        </figure>
+
+        <figure class="scatter-card">
+          <h4>Rainfall vs Vegetation</h4>
+          <p class="figure-sub">Precipitation (mm) on x-axis · NDVI on y-axis</p>
+          <p class="figure-note">
+            Iowa never breaks 85 mm in any month, but its peak NDVI
+            is greater than both Kansas and Texas, which each exceed 110 mm in
+            the month with the most rainfall.
+            <strong>The type of crop is more impactful for setting the ceiling than the amount of water.</strong>
+          </p>
+          <div id="scatter-precip" class="scatter-frame"></div>
+        </figure>
+      </div>
+
+      <aside class="method-note">
+        <span class="note-eyebrow">A note on overlapping dots</span>
+        <p>
+          Every labelled bubble is placed at the exact <em>(x, y)</em> of its
+          underlying value. When two months
+          share nearly identical climate, their dots overlap. This shows the months were
+          climatologically interchangeable. Hover over any bubble to read its
+          exact NDVI, temperature, and precipitation.
         </p>
-      </div>
+      </aside>
+    </div>
+  </section>
 
-      <!-- CONTROLS -->
-      <div class="sticky-controls">
-        <div class="controls">
-          <div class="control-group">
-            <label for="variable-select">Variable:</label>
-            <select id="variable-select">
-              <option value="LST_Day">Land Surface Temp — Day (°C)</option>
-              <option value="LST_Night">Land Surface Temp — Night (°C)</option>
-              <option value="Precipitation">Precipitation (mm)</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="month-slider">Month: </label>
-            <input type="range" id="month-slider" min="1" max="12" value="7" />
-            <span id="month-label">July</span>
-          </div>
-        </div>
-      </div>
+  <!-- ============== DAY-NIGHT — diverging LST ============== -->
+  <section id="day-night" class="section section-tint">
+    <div class="container narrow">
+      <p class="kicker">A Hidden Variable</p>
+      <h2 class="display">Crops feel the night too.</h2>
+      <p class="lede">
+        Plants respire after dark. The wider the day and night gap in
+        <strong>land surface temperature</strong>, the more
+        energy crops burn just to stay alive intead of building grain or fiber. Below, each panel splits day-time LST
+        from night-time LST for every month of 2023.
+      </p>
+    </div>
+    <div class="container wide">
+      <div id="day-night-chart" class="day-night-chart"></div>
+    </div>
+  </section>
 
-      <div class="charts">
-        <div class="chart-card">
-          <h2 id="choro-left-title">Land Surface Temp — Day · July</h2>
-          <p class="chart-note">
-            Color intensity shows the selected variable's value for each county.
-            Use the controls above to switch variables and scrub through months.
+  <!-- ============== TAKEAWAYS ============== -->
+  <section id="takeaways" class="section">
+    <div class="container narrow">
+      <p class="kicker">So what did we learn?</p>
+      <h2 class="display">Three findings, one warning.</h2>
+    </div>
+    <div class="container wide">
+      <div class="takeaway-grid">
+        <article class="takeaway-card">
+          <div class="big-number">01</div>
+          <h3>State averages can lie by 0.6 NDVI.</h3>
+          <p>
+            In April 2023, eastern Texas counties hit a near-rainforest
+            0.79 while western Texas counties never broke 0.15. Reporting
+            a single state value masks a 0.64 gap inside <em>one state</em>. 
+            This difference is larger than any difference between Iowa, Kansas, and Texas
+            as wholes.
           </p>
-          <div id="choro-left"></div>
-          <div id="legend-left" class="legend-bar-container"></div>
-        </div>
-        <div class="chart-card">
-          <h2 id="choro-right-title">Vegetation Index (NDVI) · July</h2>
-          <p class="chart-note">
-            NDVI measures vegetation health — higher values mean greener, healthier crops.
-            Compare with the left map to see how vegetation responds to climate.
+        </article>
+        <article class="takeaway-card">
+          <div class="big-number">02</div>
+          <h3>Temperature alone does not explain greenness.</h3>
+          <p>
+            Texas is consistently hotter than Iowa, but Iowa's NDVI peaks higher.
+            Crop choice, the timing of rain, and even the night-time chill
+            matter just as much as raw daytime heat. The same
+            <span class="temp" data-c="30">30 °C</span> result in thriving corn in
+            Iowa, who gets plenty of water and less bounfitful cotton across West Texas, which suffers from less water.
           </p>
-          <div id="choro-right"></div>
-          <div id="legend-right" class="legend-bar-container"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 03: LINE CHART (binary) -->
-    <section class="dark-section">
-      <div class="section-intro">
-        <p class="section-label">Section 03</p>
-        <h2>Month-by-Month Patterns</h2>
-        <p>In the left plot, each line shows each state's climate condition of LST and Precipitation
-          under January to December. In the right plot, each line shows each state's NDVI change.
-          Use the Variable dropdown above to switch between LST and Precipitation.
-          The LST line plot shows that cotton tends to thrive in hotter region, while corn in coolest.</p>
-      </div>
-      <div class="charts">
-        <div class="chart-card">
-          <h2 id="line-left-title">Land Surface Temp — Day · Monthly</h2>
-          <p class="chart-note">Controlled by the Variable selector above.</p>
-          <div id="line-chart-left"></div>
-        </div>
-        <div class="chart-card">
-          <h2>Vegetation Index (NDVI) · Monthly</h2>
-          <p class="chart-note">NDVI shows vegetation health across the year for each state.</p>
-          <div id="line-chart-right"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 04: SCATTER PLOTS -->
-    <section class="dark-section">
-      <div class="section-intro">
-        <p class="section-label">Section 04</p>
-        <h2>Does Climate Drive Vegetation?</h2>
-        <p>Each dot is one state in one month. Iowa achieves peak greenness at moderate temperatures — not the hottest. Crop type matters more than raw climate.</p>
-      </div>
-
-      <!-- Shared filter buttons -->
-      <div id="scatter-filter-row" class="scatter-btn-row" style="margin-bottom:16px"></div>
-
-      <div class="charts">
-        <div class="chart-card">
-          <h2>LST vs Vegetation (NDVI)</h2>
-          <p class="chart-note">
-            Each dot is one state in one month. Hover for details.
-            Notice how Iowa's NDVI rises sharply in summer despite moderate temperatures.
-            Kansas's wheat also rises sharply in summer in temperature higher than that of corn.
+        </article>
+        <article class="takeaway-card">
+          <div class="big-number">03</div>
+          <h3>The night tells the other half.</h3>
+          <p>
+            Texas night-time LST stays above
+            <span class="temp" data-c="20">20 °C</span> from June through
+            September, denying cotton the cool hours plants use to recover.
+            Iowa's nights, by contrast, average
+            <span class="temp" data-c="18">18 °C</span> even in July which gives the corn overnight which can readily be seen.
           </p>
-          <div id="scatter-lst"></div>
-        </div>
-        <div class="chart-card">
-          <h2>Precipitation vs Vegetation (NDVI)</h2>
-          <p class="chart-note">
-            Kansas receives heavy spring rain, yet Iowa out-greens them in summer —
-            suggesting crop type matters as much as rainfall.
-          </p>
-          <div id="scatter-precip"></div>
-        </div>
+        </article>
       </div>
-    </section>
 
-    <!-- SECTION 05: WRITEUP -->
-    <section class="dark-section">
-      <div class="section-intro">
-        <p class="section-label">Section 05</p>
-        <h2>What We Found</h2>
-        <p>The story of America's agricultural heartland unfolds in satellite data. What does it tell us about the future?</p>
-      </div>
-      <div class="writeup">
-        <div class="writeup-grid">
-          <div>
-            <h3>What have we done so far?</h3>
-            <p>
-              We extracted monthly MODIS satellite data (NDVI, LST Day/Night) and CHIRPS
-              precipitation data for Iowa, Kansas, and Texas using Google Earth Engine,
-              enabling year-round monitoring of key climate and vegetation indicators.
-              We built a US map that highlights the three states with hover tooltips
-              displaying average climate metrics, providing geographic context for the analysis.
-              We created side-by-side choropleth maps with a month slider and variable
-              switching controls, allowing users to compare LST Day, LST Night, and precipitation
-              across all three states for any given month.
-              Finally, we built multi-line seasonal trend charts and scatter plots with
-              interactive tooltips to reveal how NDVI, LST, and precipitation interact
-              across Iowa, Kansas, and Texas throughout the year.
-            </p>
-          </div>
-          <div>
-            <h3>What will be most challenging to design?</h3>
-            <p>
-              Transitioning to sub-state choropleth maps at the county level will be our biggest
-              challenge, requiring substantial county-level raster and vector data that goes
-              beyond our current state-level aggregations.
-              The raster-to-vector aggregation process itself is technically complex — correctly
-              transforming satellite raster data into meaningful county boundaries without
-              distorting or losing spatial information demands careful handling.
-              Balancing two side-by-side interactive maps with distinct color scales while
-              keeping the month slider and variable selector responsive and intuitive will
-              require thoughtful layout and careful performance optimization.
-              Finally, ensuring that all interactions — tooltips, hover states, filtering, and
-              cross-chart synchronization — remain bug-free and cohesive across all four
-              visualization types is essential to delivering an intuitive user experience.
-              Moreover, the creative way of telling the clear story of the research topic for
-              our project by scrollytelling is also a challenging part.
-            </p>
-          </div>
-          <div>
-            <h3>Data Sources</h3>
-            <p>
-              NASA MODIS products: MOD13A2 (NDVI), MOD11A2 (LST Day), MYD11A2 (LST Night),
-              MCD12Q1 (Land Cover). Precipitation from UCSB-CHG/CHIRPS/DAILY.
-              All data extracted via Google Earth Engine for the years 2015–2020,
-              averaged monthly across the three target states.
-            </p>
-          </div>
-          <div>
-            <h3>Visual Encoding</h3>
-            <p>
-              Choropleth maps use sequential color scales: green for NDVI, orange for LST,
-              and blue for precipitation. Line charts use distinct colors per state —
-              yellow for Iowa, green for Kansas, red-orange for Texas — consistent across
-              all visualizations. Scatter plots encode month as dot position and state as color.
-            </p>
-          </div>
+      <article class="takeaway-warning" aria-labelledby="warning-title">
+        <div class="warning-eyebrow"><span class="warning-icon" aria-hidden="true">!</span> The warning</div>
+        <h3 id="warning-title">Time to retire the state average.</h3>
+        <p>
+          The 0.64 NDVI gap we measured inside the state of Texas in April 2023
+          is not an outlier, but is instead what every farm state looks like
+          once you stop averaging. As climate change widens the
+          precipitation divide inside each state, that gap will
+          only deepen. State-level reporting was an approximation born
+          of measurement limits decades ago. <em>Those limits no longer
+          exist.</em>
+        </p>
+      </article>
+    </div>
+
+    <div class="container narrow process-box">
+      <h3 class="process-heading">What we built · What was hard</h3>
+      <div class="process-grid">
+        <div>
+          <h4>What we have done</h4>
+          <ul>
+            <li>Pulled MODIS NDVI (MOD13A2), LST day &amp; night (MOD11A2), and CHIRPS precipitation for every county in Iowa, Kansas, and Texas for the full 2023 calendar year, which were then all aggregated to monthly means inside Google Earth Engine.</li>
+            <li>Built an eight-section scrollytelling page in D3.js, anchored by six interactive visualisations: a US intro map, a state-vs-county reveal, a 458-county time machine with sparkline hover, a radial crop calendar, paired scatter plots with crop-stage annotations, and a day-vs-night LST chart.</li>
+            <li>Added a site-wide <strong>°C ↔ °F toggle</strong> so American and international readers can each read the data in their native unit. This updates every choropleth tick, axis label, tooltip, and inline number on the page re-renders in place, without a page reload.</li>
+            <li>Authored an And-But-Therefore narrative connecting satellite observation to crop-specific lifecycle knowledge.</li>
+          </ul>
+        </div>
+        <div>
+          <h4>What was the most challenging</h4>
+          <ul>
+            <li>Designing interactions that <em>reveal patterns a static plot cannot</em> (especially the per-county sparkline-on-hover), which lets readers compare one county's full-year trajectory against the regional choropleth without leaving the page.</li>
+            <li>Keeping three side-by-side maps (Iowa, Kansas, Texas) visually balanced when Texas is nearly 5× larger than Iowa. This was done by having each map is independently fit to its own bounds while sharing one global color scale.</li>
+            <li>Implementing the °C/°F toggle correctly. <em>Absolute temperatures</em> need the +32 offset (0 °C = 32 °F) but <em>temperature differences</em> only scale (a 21 °C gap is 38 °F, not 70 °F). The two cases live in separate API functions so a tooltip's Day, Night, and Gap rows convert them independently.</li>
+            <li>Writing prose that turns satellite numbers into a story that someone without prior exposure to the data can understand.</li>
+          </ul>
         </div>
       </div>
-      <div class="team-info">
-        <p><strong>Team Members</strong></p>
-        <ul>
-          <li>Zihan Zhang — zaz003@ucsd.edu</li>
-          <li>Baoyi Wan — bawan@ucsd.edu</li>
-          <li>Kangxin Peng — k2peng@ucsd.edu</li>
-          <li>Yadushan Thillainathan — ythillainathan@ucsd.edu</li>
-        </ul>
-      </div>
-    </section>
+    </div>
+  </section>
 
-  </main>
+  <!-- ============== FOOTER ============== -->
+  <footer class="site-footer">
+    <div class="container narrow">
+      <p class="footer-credits">Built with <a href="https://d3js.org/" target="_blank" rel="noopener">D3.js</a> and <a href="https://github.com/russellgoldenberg/scrollama" target="_blank" rel="noopener">Scrollama</a>.</p>
 
-  <div id="tooltip"></div>
-  <script src="script.js"></script>
+      <dl class="footer-sources">
+        <dt>Time window</dt>
+        <dd>January 1 – December 31, <strong>2023</strong> (12 monthly composites)</dd>
+
+        <dt>Vegetation Index (NDVI)</dt>
+        <dd><a href="https://lpdaac.usgs.gov/products/mod13a2v061/" target="_blank" rel="noopener">NASA MODIS MOD13A2</a> — 16-day, 1 km</dd>
+
+        <dt>Land Surface Temperature (Day &amp; Night)</dt>
+        <dd><a href="https://lpdaac.usgs.gov/products/mod11a2v061/" target="_blank" rel="noopener">NASA MODIS MOD11A2</a> — 8-day, 1 km</dd>
+
+        <dt>Precipitation</dt>
+        <dd><a href="https://www.chc.ucsb.edu/data/chirps" target="_blank" rel="noopener">CHIRPS Daily</a> — UCSB Climate Hazards Center, 5 km</dd>
+
+        <dt>County boundary geometry</dt>
+        <dd><a href="https://developers.google.com/earth-engine/datasets/catalog/TIGER_2018_Counties" target="_blank" rel="noopener">US Census TIGER/2018/Counties</a> for zonal stats; <a href="https://github.com/topojson/us-atlas" target="_blank" rel="noopener">us-atlas</a> TopoJSON for front-end maps</dd>
+
+        <dt>State identifiers</dt>
+        <dd>US Census <strong>STATEFP</strong> codes — 19&nbsp;Iowa · 20&nbsp;Kansas · 48&nbsp;Texas</dd>
+
+        <dt>Extraction pipeline</dt>
+        <dd>All raster bands extracted via <a href="https://earthengine.google.com/" target="_blank" rel="noopener">Google Earth Engine</a> and aggregated to county-month means (5,496 rows)</dd>
+      </dl>
+
+      <p class="footer-meta">Zihan Zhang · Baoyi Wan · Kangxin Peng · Yadushan Thillainathan</p>
+    </div>
+  </footer>
+
+  <!-- Tooltip element (shared) -->
+  <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
